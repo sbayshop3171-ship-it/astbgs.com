@@ -27,6 +27,7 @@ Production source for `https://astbgs.com`.
 - Runtime cache/log files are ignored.
 - Git-based deploy updates code and migrations. Database content edited manually in local MySQL is not auto-synced unless you add migrations or import data separately.
 - Daily backups are stored on the server under `/var/www/tafsir/data/backups/astbgs.com`.
+- Instant deploy hook logs are written to `/var/www/tafsir/data/www/astbgs.com/core/storage/logs/post-receive.log`.
 
 ## Server Cron
 
