@@ -66,6 +66,7 @@ MYSQL_PWD="$DB_PASSWORD" /usr/bin/mysqldump \
     --host="$DB_HOST" \
     --port="$DB_PORT" \
     --user="$DB_USERNAME" \
+    --no-tablespaces \
     --single-transaction \
     --quick \
     --lock-tables=false \
