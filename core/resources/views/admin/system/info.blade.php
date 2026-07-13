@@ -6,11 +6,11 @@
               <div class="card-body p-0">
                 <ul class="list-group">
                   <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                    <span>{{ keyToTitle(systemDetails()['name']) }} @lang('Version')</span>
+                    <span>{{ __(gs('site_name')) }} @lang('Version')</span>
                     <span>{{ systemDetails()['version'] }}</span>
                   </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                        <span>@lang('ViserAdmin Version')</span>
+                        <span>@lang('Build Version')</span>
                         <span>{{ systemDetails()['build_version'] }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
