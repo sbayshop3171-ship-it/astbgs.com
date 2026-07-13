@@ -5,6 +5,7 @@ set -euo pipefail
 REPO_DIR="${REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 LIVE_DIR="${LIVE_DIR:-$REPO_DIR}"
 BRANCH="${DEPLOY_BRANCH:-main}"
+SKIP_FETCH="${SKIP_FETCH:-0}"
 LOG_BASE_DIR="$LIVE_DIR"
 
 if [[ ! -d "$LOG_BASE_DIR/core/storage/logs" ]]; then
@@ -31,11 +32,15 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     exit 1
 fi
 
-git fetch origin "$BRANCH"
-
 CURRENT_SHA="$(git rev-parse HEAD)"
-TARGET_SHA="$(git rev-parse "origin/$BRANCH")"
 LAST_DEPLOYED_SHA=""
+
+if [[ "$SKIP_FETCH" == "1" ]]; then
+    TARGET_SHA="$CURRENT_SHA"
+else
+    git fetch origin "$BRANCH"
+    TARGET_SHA="$(git rev-parse "origin/$BRANCH")"
+fi
 
 if [[ -f "$DEPLOY_STATE_FILE" ]]; then
     LAST_DEPLOYED_SHA="$(tr -d '[:space:]' < "$DEPLOY_STATE_FILE")"
