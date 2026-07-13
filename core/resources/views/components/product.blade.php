@@ -67,6 +67,10 @@
                             <button type="submit" class="btn btn--base btn--sm mt-1">@lang('Buy Now')</button>
                         </form>
                     @endif
+                @else
+                    <a href="{{ route('product.details', $product->slug) }}" class="btn btn-outline--base btn--sm mt-1">
+                        @lang('View Details')
+                    </a>
                 @endif
 
                 @php $hasDemo = !empty($product->demo_url); @endphp

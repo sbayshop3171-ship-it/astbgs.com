@@ -23,7 +23,10 @@
                             </div>
                         </div>
                         <div class="upload-product-item">
-                            <h6 class="upload-product-item__title">@lang('Files')</h6>
+                            <h6 class="upload-product-item__title">@lang('Downloadable Files')</h6>
+                            <div class="alert alert--info mb-4 py-2 px-3">
+                                <small>@lang('This author form is for downloadable products only. Order-style products are added from the admin catalog panel.')</small>
+                            </div>
                             @php
                                 $accept = '.png, .jpg, .jpeg';
                                 $uploadTerm = getContent('upload_term.content', true)->data_values;

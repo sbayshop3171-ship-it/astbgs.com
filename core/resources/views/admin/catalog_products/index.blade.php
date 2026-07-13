@@ -15,8 +15,8 @@
                                 <label>@lang('Type')</label>
                                 <select name="product_type" class="form-control select2" data-minimum-results-for-search="-1">
                                     <option value="">@lang('All')</option>
-                                    <option value="downloadable" @selected(request()->product_type === 'downloadable')>@lang('Downloadable')</option>
-                                    <option value="option_request" @selected(request()->product_type === 'option_request')>@lang('Option Request')</option>
+                                    <option value="downloadable" @selected(request()->product_type === 'downloadable')>@lang('Download Product')</option>
+                                    <option value="option_request" @selected(request()->product_type === 'option_request')>@lang('Order Product')</option>
                                 </select>
                             </div>
                             <div class="flex-grow-1">
@@ -38,9 +38,15 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between flex-wrap gap-2">
                     <h5 class="mb-0">@lang('Admin Catalog')</h5>
-                    <a href="{{ route('admin.catalog.products.create') }}" class="btn btn--primary btn-sm"><i class="las la-plus"></i> @lang('Add Product')</a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('admin.catalog.products.create', ['product_type' => 'downloadable']) }}" class="btn btn-outline--primary btn-sm"><i class="las la-download"></i> @lang('Add Download Product')</a>
+                        <a href="{{ route('admin.catalog.products.create', ['product_type' => 'option_request']) }}" class="btn btn--primary btn-sm"><i class="las la-plus"></i> @lang('Add Order Product')</a>
+                    </div>
                 </div>
                 <div class="card-body p-0">
+                    <div class="px-4 pt-4 small text-muted">
+                        @lang('Published products show on storefront categories immediately. Draft products stay hidden.')
+                    </div>
                     <div class="table-responsive">
                         <table class="table table--light style--two">
                             <thead>
@@ -73,7 +79,7 @@
                                             <small>{{ __($product->subcategory?->name) }}</small>
                                         </td>
                                         <td>
-                                            <span class="badge badge--info">{{ __(str_replace('_', ' ', $product->product_type)) }}</span>
+                                            <span class="badge badge--info">{{ __($product->productTypeLabel) }}</span>
                                         </td>
                                         <td>{{ $product->catalogPriceLabel }}</td>
                                         <td>

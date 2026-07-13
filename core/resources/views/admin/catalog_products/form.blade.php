@@ -4,6 +4,13 @@
         <div class="col-lg-12">
             <form action="{{ $product->exists ? route('admin.catalog.products.update', $product->id) : route('admin.catalog.products.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+                <div class="alert alert--info mb-4">
+                    <div class="small">
+                        <strong>@lang('Download Product:')</strong> @lang('Upload files and publish to show it immediately on category pages.')
+                        <br>
+                        <strong>@lang('Order Product:')</strong> @lang('Add pricing options and request fields. Leave downloadable files empty for service-style orders.')
+                    </div>
+                </div>
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h5 class="mb-0">{{ __($pageTitle) }}</h5>
@@ -18,8 +25,8 @@
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Type')</label>
                                 <select name="product_type" class="form-control select2 catalog-product-type" data-minimum-results-for-search="-1" required>
-                                    <option value="downloadable" @selected(old('product_type', $product->product_type ?: 'downloadable') === 'downloadable')>@lang('Downloadable')</option>
-                                    <option value="option_request" @selected(old('product_type', $product->product_type) === 'option_request')>@lang('Option Request')</option>
+                                    <option value="downloadable" @selected(old('product_type', request('product_type', $product->product_type ?: 'downloadable')) === 'downloadable')>@lang('Download Product')</option>
+                                    <option value="option_request" @selected(old('product_type', request('product_type', $product->product_type)) === 'option_request')>@lang('Order Product')</option>
                                 </select>
                             </div>
                             <div class="col-lg-3">
@@ -54,8 +61,9 @@
                             </div>
                             <div class="col-lg-3 d-flex align-items-center">
                                 <div class="form-check mt-4">
-                                    <input type="checkbox" class="form-check-input" id="is_published" name="is_published" value="1" @checked(old('is_published', $product->is_published))>
+                                    <input type="checkbox" class="form-check-input" id="is_published" name="is_published" value="1" @checked(old('is_published', $product->exists ? $product->is_published : true))>
                                     <label class="form-check-label" for="is_published">@lang('Published')</label>
+                                    <div class="text-muted small mt-1">@lang('Uncheck করলে product save হবে, কিন্তু category page-এ দেখাবে না।')</div>
                                 </div>
                             </div>
                             <div class="col-12">

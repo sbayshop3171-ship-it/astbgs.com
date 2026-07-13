@@ -81,6 +81,37 @@ class Product extends Model {
             ->allActive();
     }
 
+    public function scopeStorefrontVisible($query) {
+        return $query
+            ->where(function ($storefrontQuery) {
+                $storefrontQuery->where(function ($adminQuery) {
+                    $adminQuery->catalogManaged()
+                        ->where('is_published', Status::YES)
+                        ->where('availability_status', '!=', Status::PRODUCT_AVAILABILITY_UNAVAILABLE)
+                        ->approved();
+                })->orWhere(function ($authorQuery) {
+                    $authorQuery->where('managed_by_admin', Status::NO)
+                        ->approved();
+                });
+            })
+            ->allActive();
+    }
+
+    public function scopeStorefrontFree($query) {
+        return $query->storefrontVisible()
+            ->where(function ($freeQuery) {
+                $freeQuery->where(function ($adminQuery) {
+                    $adminQuery->where('managed_by_admin', Status::YES)
+                        ->where('product_type', Status::PRODUCT_TYPE_DOWNLOADABLE)
+                        ->where('base_price', 0);
+                })->orWhere(function ($authorQuery) {
+                    $authorQuery->where('managed_by_admin', Status::NO)
+                        ->where('product_type', Status::PRODUCT_TYPE_DOWNLOADABLE)
+                        ->where('is_free', Status::YES);
+                });
+            });
+    }
+
     public function scopeApproved($query) {
         return $query->where('status', Status::PRODUCT_APPROVED);
     }
@@ -244,6 +275,14 @@ class Product extends Model {
 
     public function getCatalogActionLabelAttribute() {
         return $this->hasActiveOptions() ? 'Select options' : 'Buy now';
+    }
+
+    public function getProductTypeLabelAttribute() {
+        if ($this->product_type === Status::PRODUCT_TYPE_OPTION_REQUEST) {
+            return 'Order Product';
+        }
+
+        return 'Download Product';
     }
 
     public function getCatalogPriceLabelAttribute() {

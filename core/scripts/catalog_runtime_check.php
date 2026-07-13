@@ -176,7 +176,7 @@ class CatalogRuntimeCheck
 
     private function runChecks(): void
     {
-        $this->testUploadRouteRestrictions();
+        $this->testUploadRouteAccess();
         $this->testAdminProductsCreated();
         $this->testProductRendering();
         $this->testFileReplacement();
@@ -186,15 +186,21 @@ class CatalogRuntimeCheck
         $this->testAdminOrderScreens();
     }
 
-    private function testUploadRouteRestrictions(): void
+    private function testUploadRouteAccess(): void
     {
         $author = User::find(6);
 
-        $authorResponse = $this->dispatchGet(route('user.product.upload'), $author);
+        $authorCategoryResponse = $this->dispatchGet(route('user.product.upload.category'), $author);
+        $authorUploadResponse = $this->dispatchGet(route('user.product.upload', [
+            'category' => $this->category->id,
+            'subcategory' => $this->subcategory->id,
+        ]), $author);
         $this->record(
-            'author.upload.url.disabled',
-            $authorResponse->isRedirect() && str_contains($authorResponse->headers->get('Location', ''), route('home', [], false)),
-            'Author upload route should redirect to home because catalog is admin-only'
+            'author.download.upload.available',
+            $authorCategoryResponse->getStatusCode() === 200
+                && $authorUploadResponse->getStatusCode() === 200
+                && str_contains($authorUploadResponse->getContent(), 'Main File'),
+            'Author should be able to open downloadable upload flow'
         );
 
         $buyerResponse = $this->dispatchGet(route('user.product.upload'), $this->buyer);
@@ -206,8 +212,19 @@ class CatalogRuntimeCheck
         );
 
         $productController = app(ProductController::class);
-        $redirect = $productController->upload();
-        $this->record('upload.controller.redirects', $redirect instanceof RedirectResponse, 'Upload controller returns redirect response');
+        $request = Request::create(route('user.product.upload', [
+            'category' => $this->category->id,
+            'subcategory' => $this->subcategory->id,
+        ]), 'GET');
+        $request->setLaravelSession(app('session.store'));
+        $request->setUserResolver(fn () => $author);
+        app()->instance('request', $request);
+        $viewResponse = $productController->upload();
+        $this->record(
+            'upload.controller.renders.form',
+            method_exists($viewResponse, 'render'),
+            'Upload controller should render author downloadable upload form'
+        );
     }
 
     private function testAdminProductsCreated(): void
@@ -254,8 +271,10 @@ class CatalogRuntimeCheck
 
         $this->record(
             'products.list.renders.managed.items',
-            str_contains($productsHtml, $this->downloadableProduct->title) && str_contains($productsHtml, $this->optionProduct->title),
-            'Products page should list both admin-managed product types'
+            str_contains($productsHtml, $this->downloadableProduct->title)
+                && str_contains($productsHtml, $this->optionProduct->title)
+                && str_contains($productsHtml, $this->legacyProduct->title),
+            'Products page should list admin order products and author downloadable items'
         );
 
         $this->record(
@@ -270,8 +289,10 @@ class CatalogRuntimeCheck
 
         $this->record(
             'category.page.renders.both.items',
-            str_contains($categoryHtml, $this->downloadableProduct->title) && str_contains($categoryHtml, $this->optionProduct->title),
-            'Category/subcategory page should render both product types'
+            str_contains($categoryHtml, $this->downloadableProduct->title)
+                && str_contains($categoryHtml, $this->optionProduct->title)
+                && str_contains($categoryHtml, $this->legacyProduct->title),
+            'Category/subcategory page should render order products and author downloadable items'
         );
 
         $detailHtml = $this->renderView(function () {

@@ -50,7 +50,7 @@ class SiteController extends Controller {
         $categories = Category::active()
             ->withCount([
                 'products' => function ($query) {
-                    $query->catalogPublished();
+                    $query->storefrontVisible();
                 },
             ])->orderByDesc('products_count')->get();
         $sections    = Page::where('tempname', activeTemplate())->where('slug', 'category')->first();
@@ -73,7 +73,7 @@ class SiteController extends Controller {
     public function products() {
         $request = request();
         $pageTitle = "All Items";
-        $query = Product::with(['author', 'activeOptions'])->catalogPublished();
+        $query = Product::with(['author', 'activeOptions'])->storefrontVisible();
         $products = $this->filterPorducts($query);
 
         // Handle AJAX
@@ -84,7 +84,7 @@ class SiteController extends Controller {
         }
 
         $ratings    = Rating::get();
-        $categories = Category::active()->whereHas('products', fn($q) => $q->catalogPublished())->get();
+        $categories = Category::active()->whereHas('products', fn($q) => $q->storefrontVisible())->get();
 
         return view('Template::products', compact(
             'pageTitle',
@@ -109,7 +109,7 @@ class SiteController extends Controller {
             $pageTitle   = $category->name;
         }
 
-        $products = Product::with(['author', 'activeOptions'])->catalogPublished()
+        $products = Product::with(['author', 'activeOptions'])->storefrontVisible()
             ->where('category_id', $category->id)
             ->when($subcategory, function ($query) use ($subcategory) {
                 $query->where('subcategory_id', $subcategory->id);
@@ -190,10 +190,10 @@ class SiteController extends Controller {
         $pageTitle = "Free Items";
 
         $categories  = Category::active()->whereHas('products', function ($query) {
-            $query->catalogPublished()->where('base_price', 0);
+            $query->storefrontFree();
         })->get();
 
-        $products  = Product::with(['author', 'activeOptions'])->searchable(['title'])->catalogPublished()->where('base_price', 0)->orderBy('total_download', 'DESC')->paginate(getPaginate(16));
+        $products  = Product::with(['author', 'activeOptions'])->searchable(['title'])->storefrontFree()->orderBy('total_download', 'DESC')->paginate(getPaginate(16));
         return view('Template::free_products', compact('pageTitle', 'categories', 'products'));
     }
 

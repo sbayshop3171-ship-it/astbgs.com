@@ -7,6 +7,9 @@
                     <form action="{{ route('user.product.upload') }}" class="upload-product-item-wrapper">
                         <div class="upload-product-item">
                             <h6 class="upload-product-item__title">@lang('Select Category')</h6>
+                            <div class="alert alert--info mb-4 py-2 px-3">
+                                <small>@lang('Author panel থেকে শুধু downloadable product upload করা যাবে. Order Product শুধু admin catalog থেকে add হবে.')</small>
+                            </div>
                             @if ($categories->isEmpty())
                                 <div class="alert alert-info mb-4">
                                     @lang('No active category or subcategory is available yet. Please add them from the admin panel before uploading a product.')
@@ -32,7 +35,7 @@
                             @if (gs('free_item'))
                                 <div class="form-group d-flex">
                                     <div>
-                                        <label class="form--label mb-0 me-2">@lang('Would you like to offer this product for free?')</label>
+                                        <label class="form--label mb-0 me-2">@lang('Would you like to offer this download product for free?')</label>
                                     </div>
                                     <div class="custom-switch-div">
                                         <div class="custom-switch">

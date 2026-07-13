@@ -25,7 +25,10 @@
 
                         <div class="upload-product-item">
                             @php $accept = '.png, .jpg, .jpeg' @endphp
-                            <h6 class="upload-product-item__title">@lang('Files')</h6>
+                            <h6 class="upload-product-item__title">@lang('Downloadable Files')</h6>
+                            <div class="alert alert--info mb-4 py-2 px-3">
+                                <small>@lang('You are editing a downloadable product. Order Product entries remain admin-only.')</small>
+                            </div>
                             <div class="form-group">
                                 <label class="form--label required">@lang('Thumbnail Image')</label>
                                 <input type="file" class="form--control " name="thumbnail" accept="{{ $accept }}">

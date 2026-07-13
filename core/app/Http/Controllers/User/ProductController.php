@@ -17,38 +17,69 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    protected function uploadsDisabledResponse()
+    protected function authorOwnedProduct(string|int $value, string $field = 'slug'): Product
     {
-        $notify[] = ['error', 'Vendor item uploads are disabled. Products are now managed by the admin catalog only.'];
-        return to_route('home')->withNotify($notify);
+        return Product::where($field, $value)
+            ->where('user_id', auth()->id())
+            ->where('managed_by_admin', Status::NO)
+            ->firstOrFail();
     }
 
     public function selectCategory()
     {
-        return $this->uploadsDisabledResponse();
+        $pageTitle = 'Select Category';
+
+        $categories = Category::active()->whereHas('subcategories', function ($subcategory) {
+            $subcategory->active();
+        })->with(['subcategories' => function ($subcategory) {
+            $subcategory->active();
+        }])->get();
+
+        return view('Template::user.product.select_category', compact('pageTitle', 'categories'));
     }
 
     public function upload()
     {
-        return $this->uploadsDisabledResponse();
+        $categoryId    = request()->category;
+        $subCategoryId = request()->subcategory;
+        $isFree        = request()->is_free ?? 0;
+
+        if (!$categoryId || !$subCategoryId) {
+            return to_route('user.product.upload.category');
+        }
+
+        $categories = Category::active()->whereHas('subcategories', function ($subcategory) {
+            $subcategory->active();
+        })->with(['subcategories' => function ($subcategory) {
+            $subcategory->active();
+        }])->get();
+
+        $pageTitle   = 'Upload Download Product';
+        $category    = Category::active()->findOrFail($categoryId);
+        $subCategory = Subcategory::active()->where('category_id', $categoryId)->findOrFail($subCategoryId);
+        $form        = Form::where('id', $subCategory->form_id)->where('act', 'subcategory_attributes')->first();
+
+        return view('Template::user.product.upload', compact('pageTitle', 'isFree', 'form', 'categories'));
     }
 
     public function edit($slug)
     {
-        return $this->uploadsDisabledResponse();
+        $product   = $this->authorOwnedProduct($slug);
+        $pageTitle = 'Edit Download Product';
+        $form      = Form::where('id', $product->subcategory->form_id)->where('act', 'subcategory_attributes')->first();
+
+        return view('Template::user.product.edit', compact('pageTitle', 'form', 'product'));
     }
 
     public function saveProduct(Request $request, $id = null)
     {
-        return $this->uploadsDisabledResponse();
-
         if (!$id) {
             $product          = new Product();
             $product->slug    = generateUniqueProductSlug($request->title);
             $product->user_id = auth()->id();
             $isFree           = $request->has('is_free') && $request->is_free == 1;
         } else {
-            $product = Product::findOrFail($id);
+            $product = $this->authorOwnedProduct($id, 'id');
             $isFree  = $product->is_free;
         }
 
@@ -92,6 +123,10 @@ class ProductController extends Controller
         if (gs('free_item')) {
             $product->is_free = $isFree ? Status::ENABLE : Status::DISABLE;
         }
+
+        $product->managed_by_admin = Status::NO;
+        $product->product_type = Status::PRODUCT_TYPE_DOWNLOADABLE;
+        $product->availability_status = $product->availability_status ?: Status::PRODUCT_AVAILABILITY_AVAILABLE;
 
         $product->title = $request->title;
         $purifier       = new \HTMLPurifier();
@@ -165,10 +200,12 @@ class ProductController extends Controller
 
     public function productActivities($slug)
     {
-        return $this->uploadsDisabledResponse();
-
         $pageTitle = 'Item Activity Log';
-        $product   = Product::where('status', '!=', Status::PRODUCT_HARD_REJECTED)->countComment()->where('slug', $slug)->firstOrFail();
+        $product   = Product::where('status', '!=', Status::PRODUCT_HARD_REJECTED)
+            ->where('managed_by_admin', Status::NO)
+            ->countComment()
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         abort_if($product->user_id != auth()->id(), 404);
         $activities = $product->activities()->with(['user', 'reviewer'])->latest()->take(8)->get();
@@ -177,13 +214,11 @@ class ProductController extends Controller
     }
 
     public function ajaxActivity($slug){
-        return response()->json(['html' => '', 'hasMore' => false]);
-
         if (!request()->ajax()) {
             return response()->json(['html' => '', 'hasMore' => false]);
         }
 
-        $product = Product::where('user_id', auth()->id())->where('slug', $slug)->first();
+        $product = Product::where('user_id', auth()->id())->where('managed_by_admin', Status::NO)->where('slug', $slug)->first();
         if(!$product){
             return response()->json(['html' => '', 'hasMore' => false]);
         }
@@ -206,8 +241,6 @@ class ProductController extends Controller
 
     public function replyActivity(Request $request, $productId)
     {
-        return $this->uploadsDisabledResponse();
-
         $request->validate([
             'message' => 'required',
         ]);
@@ -322,9 +355,7 @@ class ProductController extends Controller
 
     public function commenting($slug)
     {
-        return $this->uploadsDisabledResponse();
-
-        $product = Product::where('slug', $slug)->where('user_id', auth()->id())->firstOrFail();
+        $product = Product::where('slug', $slug)->where('user_id', auth()->id())->where('managed_by_admin', Status::NO)->firstOrFail();
 
         $product->comment_disable = !$product->comment_disable;
         $product->save();
