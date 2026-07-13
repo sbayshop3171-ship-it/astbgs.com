@@ -1,4 +1,9 @@
 @if ($seo)
+    @php
+        $socialImageUrl = $seoImage ?? getImage(getFilePath('seo') . '/' . $seo->image);
+        $socialImagePath = parse_url($socialImageUrl, PHP_URL_PATH) ?: '';
+        $socialImageExtension = pathinfo($socialImagePath, PATHINFO_EXTENSION) ?: 'png';
+    @endphp
     <meta name="title" Content="{{ gs()->siteName(__($pageTitle)) }}">
     <meta name="description" content="{{ isset($seoContents->description) && $seoContents->description ? $seoContents->description : $seo->description }}">
     <meta name="keywords" content="{{ implode(',', ((isset($seoContents->keywords) && $seoContents->keywords) ? $seoContents->keywords : $seo->keywords)) }}">
@@ -15,13 +20,13 @@
     {{-- <!-- Google / Search Engine Tags --> --}}
     <meta itemprop="name" content="{{ gs()->siteName($pageTitle) }}">
     <meta itemprop="description" content="{{ (isset($seoContents->description) && $seoContents->description) ? $seoContents->description : $seo->description }}">
-    <meta itemprop="image" content="{{ $seoImage ?? getImage(getFilePath('seo') . '/' . $seo->image) }}">
+    <meta itemprop="image" content="{{ $socialImageUrl }}">
     {{-- <!-- Facebook Meta Tags --> --}}
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ (isset($seoContents->social_title) && $seoContents->social_title) ? $seoContents->social_title : $seo->social_title }}">
     <meta property="og:description" content="{{ (isset($seoContents->social_description) && $seoContents->social_description) ? $seoContents->social_description : $seo->social_description }}">
-    <meta property="og:image" content="{{ $seoImage ?? getImage(getFilePath('seo') . '/' . $seo->image) }}">
-    <meta property="og:image:type" content="image/{{ pathinfo($seoImage ?? getImage(getFilePath('seo')) . '/' . $seo->image)['extension'] }}">
+    <meta property="og:image" content="{{ $socialImageUrl }}">
+    <meta property="og:image:type" content="image/{{ $socialImageExtension }}">
     @php $socialImageSize = explode('x', getFileSize('seo')) @endphp
     <meta property="og:image:width" content="{{ $socialImageSize[0] }}">
     <meta property="og:image:height" content="{{ $socialImageSize[1] }}">

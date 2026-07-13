@@ -847,6 +847,8 @@ class CatalogRuntimeCheck
 
     private function cleanupPreviousFixtures(): void
     {
+        $buyer = $this->buyer ?? User::where('email', 'qa.catalog.buyer@example.com')->first();
+
         $oldProducts = Product::where('title', 'like', 'QA Catalog %')->get();
 
         foreach ($oldProducts as $product) {
@@ -866,12 +868,12 @@ class CatalogRuntimeCheck
         })->pluck('id');
 
         Deposit::whereIn('order_id', $oldOrderIds)->delete();
-        Transaction::where('remark', 'catalog_purchase')->whereIn('user_id', [$this->buyer?->id ?? 0])->delete();
+        Transaction::where('remark', 'catalog_purchase')->whereIn('user_id', [$buyer?->id ?? 0])->delete();
         \App\Models\AdminNotification::where('title', 'like', 'Payment successful via %')->delete();
-        \App\Models\DownloadLog::where('user_id', optional($this->buyer)->id)->delete();
-        \App\Models\Earning::where('user_id', optional($this->buyer)->id)->delete();
+        \App\Models\DownloadLog::where('user_id', optional($buyer)->id)->delete();
+        \App\Models\Earning::where('user_id', optional($buyer)->id)->delete();
         \App\Models\PlanHistory::where('remark', 'purchase')->orWhere('remark', 'commission')->orWhere('remark', 'level_commission')->delete();
-        \App\Models\UserPlan::where('user_id', optional($this->buyer)->id)->delete();
+        \App\Models\UserPlan::where('user_id', optional($buyer)->id)->delete();
 
         \App\Models\OrderItem::whereIn('order_id', $oldOrderIds)->delete();
         Order::whereIn('id', $oldOrderIds)->delete();
