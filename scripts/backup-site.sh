@@ -4,7 +4,13 @@ set -euo pipefail
 
 LIVE_DIR="${LIVE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 APP_DIR="${APP_DIR:-$LIVE_DIR/core}"
-BACKUP_ROOT="${BACKUP_ROOT:-$(cd "$LIVE_DIR/.." && pwd)/backups/$(basename "$LIVE_DIR")}"
+BACKUP_BASE_DEFAULT="$(cd "$LIVE_DIR/.." && pwd)"
+
+if [[ "$(basename "$BACKUP_BASE_DEFAULT")" == "www" ]]; then
+    BACKUP_BASE_DEFAULT="$(cd "$BACKUP_BASE_DEFAULT/.." && pwd)"
+fi
+
+BACKUP_ROOT="${BACKUP_ROOT:-$BACKUP_BASE_DEFAULT/backups/$(basename "$LIVE_DIR")}"
 FILES_RETENTION_DAYS="${FILES_RETENTION_DAYS:-7}"
 DB_RETENTION_DAYS="${DB_RETENTION_DAYS:-30}"
 LOG_RETENTION_DAYS="${LOG_RETENTION_DAYS:-30}"
