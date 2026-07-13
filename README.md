@@ -11,7 +11,7 @@ Production source for `https://astbgs.com`.
 
 ## Live Deployment
 
-- Git clone path on server: `/var/www/tafsir/deployments/astbgs.com-repo`
+- Git clone path on server: `/var/www/tafsir/data/deployments/astbgs.com-repo`
 - Live path: `/var/www/tafsir/data/www/astbgs.com`
 - Branch: `main`
 - Auto deploy script: `scripts/auto-deploy.sh`
@@ -27,5 +27,5 @@ Production source for `https://astbgs.com`.
 ## Server Cron
 
 ```cron
-* * * * * REPO_DIR=/var/www/tafsir/deployments/astbgs.com-repo LIVE_DIR=/var/www/tafsir/data/www/astbgs.com /usr/bin/env bash /var/www/tafsir/deployments/astbgs.com-repo/scripts/auto-deploy.sh
+* * * * * REPO_DIR=/var/www/tafsir/data/deployments/astbgs.com-repo LIVE_DIR=/var/www/tafsir/data/www/astbgs.com /usr/bin/env bash /var/www/tafsir/data/deployments/astbgs.com-repo/scripts/auto-deploy.sh
 ```
