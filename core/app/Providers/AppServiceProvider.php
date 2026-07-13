@@ -13,9 +13,12 @@ use App\Models\SupportTicket;
 use App\Models\AdminNotification;
 use App\Models\Comment;
 use App\Models\Review;
+use App\Support\HealthCheckService;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +37,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $viewShare['emptyMessage'] = 'Data not found';
         view()->share($viewShare);
+
+        Event::listen(DiagnosingHealth::class, function () {
+            app(HealthCheckService::class)->run();
+        });
 
 
         view()->composer('admin.partials.sidenav', function ($view) {

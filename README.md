@@ -1,5 +1,7 @@
 # astbgs.com
 
+[![Live Health](https://github.com/sbayshop3171-ship-it/astbgs.com/actions/workflows/live-health.yml/badge.svg?branch=main)](https://github.com/sbayshop3171-ship-it/astbgs.com/actions/workflows/live-health.yml)
+
 Production source for `https://astbgs.com`.
 
 ## Local Workflow
@@ -18,6 +20,13 @@ Production source for `https://astbgs.com`.
 - Branch: `main`
 - Auto deploy script: `scripts/auto-deploy.sh`
 - Backup script: `scripts/backup-site.sh`
+
+## Live Status
+
+- GitHub Actions workflow `Live Health Monitor` checks `https://astbgs.com/health`, `/`, `/products`, and `/cart`.
+- Green badge or green Actions run means the live deploy finished and the core storefront routes responded successfully.
+- Red badge or failed Actions run means the live app is down, a migration/schema issue exists, or a core page is returning an error.
+- Manual JSON health endpoint: `https://astbgs.com/health`
 
 ## Notes
 

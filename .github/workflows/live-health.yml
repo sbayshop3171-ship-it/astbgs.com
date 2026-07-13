@@ -1,0 +1,77 @@
+name: Live Health Monitor
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
+
+jobs:
+  live-health:
+    runs-on: ubuntu-latest
+    env:
+      LIVE_BASE_URL: https://astbgs.com
+    steps:
+      - name: Wait for live deploy after push
+        if: github.event_name == 'push'
+        run: sleep 90
+
+      - name: Probe live health and storefront pages
+        run: |
+          set -euo pipefail
+
+          check_url() {
+            local path="$1"
+            local expect_json="${2:-0}"
+            local body_file
+            local status
+
+            body_file="$(mktemp)"
+            status="$(curl --silent --show-error --location \
+              --connect-timeout 10 --max-time 30 \
+              --output "$body_file" --write-out "%{http_code}" \
+              "${LIVE_BASE_URL}${path}")"
+
+            echo "Checked ${LIVE_BASE_URL}${path} -> HTTP ${status}"
+            cat "$body_file"
+            echo
+
+            if [ "$status" -lt 200 ] || [ "$status" -ge 400 ]; then
+              rm -f "$body_file"
+              return 1
+            fi
+
+            if grep -Eqi "Whoops|Server Error|SQLSTATE|ParseError|Fatal error|Uncaught" "$body_file"; then
+              rm -f "$body_file"
+              return 1
+            fi
+
+            if [ "$expect_json" = "1" ]; then
+              python3 -c 'import json, sys; payload = json.load(open(sys.argv[1], "r", encoding="utf-8")); assert payload.get("status") == "ok", payload; assert payload.get("checks"), payload' "$body_file"
+            fi
+
+            rm -f "$body_file"
+            return 0
+          }
+
+          for attempt in $(seq 1 10); do
+            echo "Health check attempt ${attempt}/10"
+
+            if check_url "/health" 1 \
+              && check_url "/" \
+              && check_url "/products" \
+              && check_url "/cart"; then
+              echo "Live site is healthy."
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 10 ]; then
+              echo "Live site not ready yet, retrying in 30 seconds..."
+              sleep 30
+            fi
+          done
+
+          echo "Live health checks failed."
+          exit 1

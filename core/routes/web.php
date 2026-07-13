@@ -1,10 +1,38 @@
 <?php
 
+use App\Support\HealthCheckService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('activate', '/');
 Route::any('activate_system_submit', fn () => redirect('/'))
     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+
+Route::get('health', function (HealthCheckService $healthCheckService): JsonResponse {
+    try {
+        $checks = $healthCheckService->run();
+
+        return response()->json([
+            'status'      => 'ok',
+            'environment' => app()->environment(),
+            'timestamp'   => now()->toIso8601String(),
+            'checks'      => $checks,
+        ], 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
+    } catch (\Throwable $exception) {
+        report($exception);
+
+        return response()->json([
+            'status'      => 'error',
+            'environment' => app()->environment(),
+            'timestamp'   => now()->toIso8601String(),
+            'message'     => $exception->getMessage(),
+        ], 503, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
+    }
+})->name('health');
 
 Route::get('favicon.ico', function () {
     $icon = public_path('assets/images/logo_icon/favicon.png');
