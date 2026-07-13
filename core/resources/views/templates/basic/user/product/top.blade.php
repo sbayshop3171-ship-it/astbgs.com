@@ -1,4 +1,5 @@
 <div class="product-details-top">
+    @php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
     @if ($product->my_product)
         <div class="mb-3">
             @if ($product->status == Status::PRODUCT_DOWN)
@@ -31,8 +32,7 @@
                 <a href="{{ route('product.details', $product->slug) }}" class="custom-tab__link">@lang('Description')</a>
             </li>
 
-
-            @if ($product->total_review)
+            @if (!$isOrderProduct && $product->total_review)
                 <li class="custom-tab__item {{ menuActive('product.reviews') }}">
                     <a href="{{ route('product.reviews', $product->slug) }}" class="custom-tab__link">
                         @lang('Reviews')
@@ -43,13 +43,15 @@
                 </li>
             @endif
 
-            <li class="custom-tab__item {{ menuActive('product.comments') }}">
-                <a href="{{ route('product.comments', $product->slug) }}" class="custom-tab__link">
-                    @lang('Comments')
-                    <span class="notification">{{ $product?->comments_count }}</span>
-                </a>
-            </li>
-            @if (gs('changelog'))
+            @if (!$isOrderProduct)
+                <li class="custom-tab__item {{ menuActive('product.comments') }}">
+                    <a href="{{ route('product.comments', $product->slug) }}" class="custom-tab__link">
+                        @lang('Comments')
+                        <span class="notification">{{ $product?->comments_count }}</span>
+                    </a>
+                </li>
+            @endif
+            @if (!$isOrderProduct && gs('changelog'))
                 @if ($product->status == Status::PRODUCT_APPROVED || $product->my_product)
                     @if (count($product->changelogs) > 0 && $product->product_updated == Status::PRODUCT_NO_UPDATE)
                         <li class="custom-tab__item {{ menuActive('product.changelog') }}">
@@ -71,13 +73,13 @@
         </ul>
         @if ($product->status == Status::PRODUCT_APPROVED)
             <div class="product-details-top__right flex-align">
-                @if ($product?->total_review >= gs('min_reviews'))
+                @if (!$isOrderProduct && $product?->total_review >= gs('min_reviews'))
                     <div class="rating-list" data-bs-toggle="tooltip" title="@lang('Total Rating')">
                         @php echo displayRating($product?->avg_rating);  @endphp
                         <span class="rating-list__text"> ({{ $product?->total_review }})</span>
                     </div>
                 @endif
-                @if (auth()->check())
+                @if (!$isOrderProduct && auth()->check())
                     <span class="sales d-block d-lg-none">@lang(str()->plural('Download', $product->total_download)) {{ $product->total_download }}</span>
                 @endif
                 @include('Template::user.product.social_share')

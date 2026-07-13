@@ -3,12 +3,13 @@
         <a href="{{ getImage($screenshotPath) }}">@lang('Image')</a>
     @endforeach
 </div>
+@php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
 <div class="product-details__inner">
     <div class="product-details__thumb">
         <img src="{{ getImage(getFilePath('productPreview') . '/' . productFilePath($product, 'preview_image'), getFileSize('productPreview')) }}"
             alt="@lang('Product Image')" />
         <div class="product-details__buttons">
-            @if ($product->demo_url)
+            @if ($product->demo_url && !$isOrderProduct)
                 <a href="{{ $product->demo_url }}" target="_blank" class="btn btn--base">@lang('Live Preview')</a>
             @endif
             @if (count($product->screenshots()))

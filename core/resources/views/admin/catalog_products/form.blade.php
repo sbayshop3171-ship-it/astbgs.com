@@ -11,6 +11,30 @@
                         <strong>@lang('Order Product:')</strong> @lang('Add pricing options and request fields. Leave downloadable files empty for service-style orders.')
                     </div>
                 </div>
+                <div class="card mb-4 type-guide downloadable-guide">
+                    <div class="card-body">
+                        <h6 class="mb-3">@lang('Download Product Setup')</h6>
+                        <div class="small text-muted mb-2">@lang('Best for files, bundles, guides, templates, scripts, archives, and instant digital delivery.')</div>
+                        <ul class="mb-0 small">
+                            <li>@lang('Choose category and subcategory first to load matching custom fields')</li>
+                            <li>@lang('Upload thumbnail, preview image, screenshots zip, and at least one downloadable file')</li>
+                            <li>@lang('Use product options only if you want multiple downloadable variants')</li>
+                            <li>@lang('Keep Published checked if you want it visible on public category pages immediately')</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card mb-4 type-guide order-guide d-none">
+                    <div class="card-body">
+                        <h6 class="mb-3">@lang('Order Product Setup')</h6>
+                        <div class="small text-muted mb-2">@lang('Best for service requests, consultations, managed delivery, custom jobs, or pay-first order flows.')</div>
+                        <ul class="mb-0 small">
+                            <li>@lang('Add one or more selectable options so the buyer can choose from a dropdown')</li>
+                            <li>@lang('Use Fixed Price for one exact amount, or Min-Max Range when the buyer must enter an allowed request amount')</li>
+                            <li>@lang('Preview image and description will be shown on the product detail page, but Live Preview and review tabs stay hidden')</li>
+                            <li>@lang('After the buyer selects an option, the flow can go directly to secure checkout')</li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h5 class="mb-0">{{ __($pageTitle) }}</h5>
@@ -28,10 +52,12 @@
                                     <option value="downloadable" @selected(old('product_type', request('product_type', $product->product_type ?: 'downloadable')) === 'downloadable')>@lang('Download Product')</option>
                                     <option value="option_request" @selected(old('product_type', request('product_type', $product->product_type)) === 'option_request')>@lang('Order Product')</option>
                                 </select>
+                                <div class="small text-muted mt-1 catalog-type-hint">@lang('Switch type to show the matching upload and pricing sections below.')</div>
                             </div>
                             <div class="col-lg-3">
-                                <label class="form-label">@lang('Base Price')</label>
+                                <label class="form-label base-price-label">@lang('Base Price')</label>
                                 <input type="number" step="any" min="0" name="base_price" class="form-control" value="{{ old('base_price', $product->base_price ?? 0) }}" required>
+                                <div class="small text-muted mt-1 base-price-hint">@lang('Used for single-price products or as a fallback when no option is selected.')</div>
                             </div>
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Category')</label>
@@ -50,6 +76,7 @@
                                         <option value="{{ $subcategory->id }}" @selected((string) old('subcategory_id', $selectedSubcategory) === (string) $subcategory->id)>{{ __($subcategory->name) }}</option>
                                     @endforeach
                                 </select>
+                                <div class="small text-muted mt-1">@lang('Choosing a subcategory reloads the page to load matching custom fields and admin recommendations.')</div>
                             </div>
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Availability')</label>
@@ -111,17 +138,22 @@
 
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">@lang('Product Options')</h5>
+                        <div>
+                            <h5 class="mb-0">@lang('Product Options')</h5>
+                            <div class="small text-muted">@lang('Order products should use options. Download products can leave this empty or use it for downloadable variants.')</div>
+                        </div>
                         <button type="button" class="btn btn-outline--primary btn-sm" id="add-option-row">@lang('Add Option')</button>
                     </div>
                     <div class="card-body">
                         <div id="option-rows">
                             @php
                                 $optionRows = old('options', $product->exists ? $product->options->map(function ($option) {
+                                    $hasRange = $option->min_amount !== null || $option->max_amount !== null;
                                     return [
                                         'id' => $option->id,
                                         'name' => $option->name,
                                         'price' => $option->price,
+                                        'pricing_mode' => $hasRange ? 'range' : 'fixed',
                                         'min_amount' => $option->min_amount,
                                         'max_amount' => $option->max_amount,
                                         'availability_note' => $option->availability_note,
@@ -139,16 +171,23 @@
                                             <input type="text" name="options[{{ $index }}][name]" class="form-control option-name" value="{{ $option['name'] ?? '' }}">
                                         </div>
                                         <div class="col-lg-2">
-                                            <label class="form-label">@lang('Price')</label>
+                                            <label class="form-label">@lang('Fixed / Starting Price')</label>
                                             <input type="number" step="any" min="0" name="options[{{ $index }}][price]" class="form-control" value="{{ $option['price'] ?? 0 }}">
                                         </div>
                                         <div class="col-lg-2">
+                                            <label class="form-label">@lang('Pricing Mode')</label>
+                                            <select name="options[{{ $index }}][pricing_mode]" class="form-control option-pricing-mode" data-minimum-results-for-search="-1">
+                                                <option value="fixed" @selected(($option['pricing_mode'] ?? 'fixed') === 'fixed')>@lang('Fixed Price')</option>
+                                                <option value="range" @selected(($option['pricing_mode'] ?? 'fixed') === 'range')>@lang('Min-Max Range')</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-2">
                                             <label class="form-label">@lang('Min Amount')</label>
-                                            <input type="number" step="any" min="0" name="options[{{ $index }}][min_amount]" class="form-control" value="{{ $option['min_amount'] ?? '' }}">
+                                            <input type="number" step="any" min="0" name="options[{{ $index }}][min_amount]" class="form-control option-min-amount" value="{{ $option['min_amount'] ?? '' }}">
                                         </div>
                                         <div class="col-lg-2">
                                             <label class="form-label">@lang('Max Amount')</label>
-                                            <input type="number" step="any" min="0" name="options[{{ $index }}][max_amount]" class="form-control" value="{{ $option['max_amount'] ?? '' }}">
+                                            <input type="number" step="any" min="0" name="options[{{ $index }}][max_amount]" class="form-control option-max-amount" value="{{ $option['max_amount'] ?? '' }}">
                                         </div>
                                         <div class="col-lg-1">
                                             <label class="form-label">@lang('Sort')</label>
@@ -290,6 +329,33 @@
             function toggleDownloadableSection() {
                 const isDownloadable = $('.catalog-product-type').val() === 'downloadable';
                 $('.downloadable-only')[isDownloadable ? 'removeClass' : 'addClass']('d-none');
+                $('.downloadable-guide').toggleClass('d-none', !isDownloadable);
+                $('.order-guide').toggleClass('d-none', isDownloadable);
+                $('.base-price-label').text(isDownloadable ? 'Base Price' : 'Base Price / Fallback Price');
+                $('.base-price-hint').text(
+                    isDownloadable
+                        ? 'Used for single-price products or as a fallback when no option is selected.'
+                        : 'Used only when you want a fallback amount. Most order products should price buyers through option rows below.'
+                );
+            }
+
+            function toggleOptionPricingRow(row) {
+                const pricingMode = row.find('.option-pricing-mode').val() || 'fixed';
+                const isRange = pricingMode === 'range';
+                const minField = row.find('.option-min-amount');
+                const maxField = row.find('.option-max-amount');
+                const minWrapper = minField.closest('.col-lg-2');
+                const maxWrapper = maxField.closest('.col-lg-2');
+
+                minWrapper.toggleClass('d-none', !isRange);
+                maxWrapper.toggleClass('d-none', !isRange);
+                minField.prop('disabled', !isRange).prop('required', isRange);
+                maxField.prop('disabled', !isRange).prop('required', isRange);
+
+                if (!isRange) {
+                    minField.val('');
+                    maxField.val('');
+                }
             }
 
             function optionRow(index, data = {}) {
@@ -302,16 +368,23 @@
                                 <input type="text" name="options[${index}][name]" class="form-control option-name" value="${data.name || ''}">
                             </div>
                             <div class="col-lg-2">
-                                <label class="form-label">Price</label>
+                                <label class="form-label">Fixed / Starting Price</label>
                                 <input type="number" step="any" min="0" name="options[${index}][price]" class="form-control" value="${data.price || 0}">
                             </div>
                             <div class="col-lg-2">
+                                <label class="form-label">Pricing Mode</label>
+                                <select name="options[${index}][pricing_mode]" class="form-control option-pricing-mode">
+                                    <option value="fixed" ${(data.pricing_mode || 'fixed') === 'fixed' ? 'selected' : ''}>Fixed Price</option>
+                                    <option value="range" ${(data.pricing_mode || 'fixed') === 'range' ? 'selected' : ''}>Min-Max Range</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-2">
                                 <label class="form-label">Min Amount</label>
-                                <input type="number" step="any" min="0" name="options[${index}][min_amount]" class="form-control" value="${data.min_amount || ''}">
+                                <input type="number" step="any" min="0" name="options[${index}][min_amount]" class="form-control option-min-amount" value="${data.min_amount || ''}">
                             </div>
                             <div class="col-lg-2">
                                 <label class="form-label">Max Amount</label>
-                                <input type="number" step="any" min="0" name="options[${index}][max_amount]" class="form-control" value="${data.max_amount || ''}">
+                                <input type="number" step="any" min="0" name="options[${index}][max_amount]" class="form-control option-max-amount" value="${data.max_amount || ''}">
                             </div>
                             <div class="col-lg-1">
                                 <label class="form-label">Sort</label>
@@ -369,9 +442,15 @@
             }
 
             $(document).on('change keyup', '.option-name', refreshFileOptionSelects);
+            $(document).on('change', '.option-pricing-mode', function() {
+                toggleOptionPricingRow($(this).closest('.option-row'));
+            });
             $('.catalog-product-type').on('change', toggleDownloadableSection);
             toggleDownloadableSection();
             refreshFileOptionSelects();
+            $('#option-rows .option-row').each(function() {
+                toggleOptionPricingRow($(this));
+            });
 
             $('.category-switch, .subcategory-switch').on('change', function() {
                 const categoryId = $('.category-switch').val();
@@ -382,7 +461,10 @@
 
             $('#add-option-row').on('click', function() {
                 $('#empty-options-text').remove();
-                $('#option-rows').append(optionRow(optionIndex));
+                $('#option-rows').append(optionRow(optionIndex, {
+                    pricing_mode: 'fixed'
+                }));
+                toggleOptionPricingRow($('#option-rows .option-row').last());
                 optionIndex++;
                 refreshFileOptionSelects();
             });

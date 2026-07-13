@@ -285,6 +285,14 @@ class Product extends Model {
         return 'Download Product';
     }
 
+    public function isAdminOrderProduct(): bool {
+        return (bool) $this->managed_by_admin && $this->product_type === Status::PRODUCT_TYPE_OPTION_REQUEST;
+    }
+
+    public function isAdminDownloadProduct(): bool {
+        return (bool) $this->managed_by_admin && $this->product_type === Status::PRODUCT_TYPE_DOWNLOADABLE;
+    }
+
     public function getCatalogPriceLabelAttribute() {
         if (!$this->managed_by_admin) {
             return $this->is_free ? trans('Free') : null;

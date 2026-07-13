@@ -248,6 +248,7 @@ class SiteController extends Controller {
     public function productReviews($slug) {
         $pageTitle = 'Item Reviews';
         $product = Product::with(['author'])->countComment()->where(['slug' => $slug])->firstOrFail();
+        $this->abortIfAuxiliaryCatalogPageHidden($product);
         $reviews  = Review::where(['product_id' => $product->id])->with(['user', 'replies', 'category']);
         abort_if(($product->status == !Status::PRODUCT_APPROVED && !$product->my_product) || $reviews->count() < gs('min_reviews'), 404);
         $reviewId = request()->review_id;
@@ -261,6 +262,7 @@ class SiteController extends Controller {
 
     public function getProductReview($slug) {
         $product = Product::where(['slug' => $slug])->firstOrFail();
+        $this->abortIfAuxiliaryCatalogPageHidden($product);
         $reviews  = Review::where(['product_id' => $product->id])->with(['user', 'replies', 'category']);
         $reviewId = request()->review_id;
         if ($reviewId) {
@@ -281,6 +283,7 @@ class SiteController extends Controller {
     public function productComments($slug) {
         $pageTitle = 'Item Comments';
         $product = Product::with(['author'])->countComment()->where(['slug' => $slug])->firstOrFail();
+        $this->abortIfAuxiliaryCatalogPageHidden($product);
         abort_if($product->status == !Status::PRODUCT_APPROVED && !$product->my_product, 404);
 
         $commentId = request()->comment_id;
@@ -298,6 +301,7 @@ class SiteController extends Controller {
 
     public function getProductComment($slug) {
         $product = Product::where(['slug' => $slug])->firstOrFail();
+        $this->abortIfAuxiliaryCatalogPageHidden($product);
 
         $comments = Comment::where(['product_id' => $product->id, 'parent_id' => 0, 'review_id' => 0])
             ->with(['user', 'user.earnings', 'product', 'replies' => function ($replyQuery) {
@@ -316,6 +320,7 @@ class SiteController extends Controller {
 
     public function productChangelog($slug) {
         $product = Product::with(['author'])->countComment()->where(['slug' => $slug])->firstOrFail();
+        $this->abortIfAuxiliaryCatalogPageHidden($product);
 
         // Check various conditions before proceeding
         abort_if(
@@ -414,6 +419,11 @@ class SiteController extends Controller {
         $pageTitle = 'Cookie Policy';
         $cookie    = Frontend::where('data_keys', 'cookie.data')->first();
         return view('Template::cookie', compact('pageTitle', 'cookie'));
+    }
+
+    protected function abortIfAuxiliaryCatalogPageHidden(Product $product): void
+    {
+        abort_if($product->isAdminOrderProduct(), 404);
     }
 
     public function placeholderImage($size = null) {

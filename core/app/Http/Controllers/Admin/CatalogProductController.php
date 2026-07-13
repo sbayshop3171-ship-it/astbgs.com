@@ -13,6 +13,7 @@ use App\Models\ProductOption;
 use App\Models\Subcategory;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class CatalogProductController extends Controller
 {
@@ -125,6 +126,12 @@ class CatalogProductController extends Controller
             'tags'                => 'nullable|array',
             'tags.*'              => 'nullable|string|max:100',
             'screenshots'         => 'nullable|file|mimes:zip',
+            'options'             => 'nullable|array',
+            'options.*.name'      => 'nullable|string|max:255',
+            'options.*.price'     => 'nullable|numeric|min:0',
+            'options.*.pricing_mode' => 'nullable|in:fixed,range',
+            'options.*.min_amount' => 'nullable|numeric|min:0',
+            'options.*.max_amount' => 'nullable|numeric|min:0',
             'catalog_files.*.file' => 'nullable|file',
         ];
 
@@ -138,6 +145,39 @@ class CatalogProductController extends Controller
         }
 
         $request->validate($validation);
+
+        $submittedOptions = collect($request->input('options', []))
+            ->filter(fn($option) => filled($option['name'] ?? null))
+            ->values();
+
+        if ($request->product_type === Status::PRODUCT_TYPE_OPTION_REQUEST && $submittedOptions->isEmpty()) {
+            throw ValidationException::withMessages([
+                'options' => 'Add at least one active option for order products.',
+            ]);
+        }
+
+        foreach ($submittedOptions as $index => $optionData) {
+            $pricingMode = $optionData['pricing_mode'] ?? ((filled($optionData['min_amount'] ?? null) || filled($optionData['max_amount'] ?? null)) ? 'range' : 'fixed');
+
+            if ($pricingMode !== 'range') {
+                continue;
+            }
+
+            $minAmount = $optionData['min_amount'] ?? null;
+            $maxAmount = $optionData['max_amount'] ?? null;
+
+            if (!filled($minAmount) || !filled($maxAmount)) {
+                throw ValidationException::withMessages([
+                    "options.$index.min_amount" => 'Range pricing requires both minimum and maximum amounts.',
+                ]);
+            }
+
+            if ((float) $minAmount > (float) $maxAmount) {
+                throw ValidationException::withMessages([
+                    "options.$index.max_amount" => 'Maximum amount must be greater than or equal to the minimum amount.',
+                ]);
+            }
+        }
 
         $product->managed_by_admin = Status::YES;
         $product->status = Status::PRODUCT_APPROVED;
@@ -195,11 +235,13 @@ class CatalogProductController extends Controller
         foreach ($submittedOptions as $index => $optionData) {
             $option = isset($optionData['id']) ? $product->options()->find($optionData['id']) : new ProductOption();
             $option ??= new ProductOption();
+            $pricingMode = $optionData['pricing_mode'] ?? ((filled($optionData['min_amount'] ?? null) || filled($optionData['max_amount'] ?? null)) ? 'range' : 'fixed');
+
             $option->product_id = $product->id;
             $option->name = $optionData['name'];
             $option->price = $optionData['price'] ?? 0;
-            $option->min_amount = $optionData['min_amount'] ?: null;
-            $option->max_amount = $optionData['max_amount'] ?: null;
+            $option->min_amount = $pricingMode === 'range' ? ($optionData['min_amount'] ?: null) : null;
+            $option->max_amount = $pricingMode === 'range' ? ($optionData['max_amount'] ?: null) : null;
             $option->availability_note = $optionData['availability_note'] ?? null;
             $option->sort_order = $optionData['sort_order'] ?? $index;
             $option->is_active = isset($optionData['is_active']) ? Status::YES : Status::NO;

@@ -28,6 +28,7 @@ class CartController extends Controller
             'product_option_id' => 'nullable|exists:product_options,id',
             'request_note'      => 'nullable|string|max:1000',
             'requested_amount'  => 'nullable|numeric|min:0',
+            'redirect_to'       => 'nullable|in:cart,checkout',
         ]);
 
         $option = null;
@@ -37,29 +38,19 @@ class CartController extends Controller
 
         $requestedAmount = $request->requested_amount;
 
-        if (
-            $product->product_type === Status::PRODUCT_TYPE_OPTION_REQUEST
-            && $option
-            && ($option->min_amount !== null || $option->max_amount !== null)
-        ) {
-            $request->validate([
-                'requested_amount' => 'required|numeric|min:0',
-            ]);
-
-            if ($option->min_amount !== null && (float) $requestedAmount < (float) $option->min_amount) {
-                $notify[] = ['error', 'Requested amount is below the minimum allowed range'];
-                return back()->withInput()->withNotify($notify);
-            }
-
-            if ($option->max_amount !== null && (float) $requestedAmount > (float) $option->max_amount) {
-                $notify[] = ['error', 'Requested amount is above the maximum allowed range'];
-                return back()->withInput()->withNotify($notify);
-            }
+        if ($error = $this->validateRequestedAmount($product->product_type, $option?->min_amount, $option?->max_amount, $requestedAmount)) {
+            $notify[] = ['error', $error];
+            return back()->withInput()->withNotify($notify);
         }
 
         CatalogCart::add($product, $option, (int) ($request->quantity ?? 1), $request->request_note, $requestedAmount);
 
         $notify[] = ['success', $product->hasActiveOptions() ? 'Product option added to cart' : 'Product added to cart'];
+
+        if ($request->redirect_to === 'checkout') {
+            return to_route('cart.checkout')->withNotify($notify);
+        }
+
         return to_route('cart.index')->withNotify($notify);
     }
 
@@ -73,6 +64,20 @@ class CartController extends Controller
         ]);
 
         foreach ($request->items as $cartKey => $item) {
+            $existingItem = CatalogCart::items()->get($cartKey);
+
+            if ($existingItem) {
+                if ($error = $this->validateRequestedAmount(
+                    $existingItem['product_type'] ?? null,
+                    $existingItem['min_amount'] ?? null,
+                    $existingItem['max_amount'] ?? null,
+                    $item['requested_amount'] ?? null
+                )) {
+                    $notify[] = ['error', $error];
+                    return back()->withInput()->withNotify($notify);
+                }
+            }
+
             CatalogCart::update($cartKey, $item);
         }
 
@@ -156,5 +161,28 @@ class CartController extends Controller
 
         $notify[] = ['success', 'Order created successfully. Please complete payment.'];
         return to_route('user.orders.pay', $order->id)->withNotify($notify);
+    }
+
+    protected function validateRequestedAmount(?string $productType, $minAmount, $maxAmount, $requestedAmount): ?string
+    {
+        $hasRange = $minAmount !== null || $maxAmount !== null;
+
+        if ($productType !== Status::PRODUCT_TYPE_OPTION_REQUEST || !$hasRange) {
+            return null;
+        }
+
+        if (!filled($requestedAmount)) {
+            return 'Requested amount is required for the selected range option';
+        }
+
+        if ($minAmount !== null && (float) $requestedAmount < (float) $minAmount) {
+            return 'Requested amount is below the minimum allowed range';
+        }
+
+        if ($maxAmount !== null && (float) $requestedAmount > (float) $maxAmount) {
+            return 'Requested amount is above the maximum allowed range';
+        }
+
+        return null;
     }
 }

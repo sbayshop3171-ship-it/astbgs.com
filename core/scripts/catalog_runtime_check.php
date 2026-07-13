@@ -301,14 +301,25 @@ class CatalogRuntimeCheck
 
         $this->record(
             'option.detail.selector.visible',
-            str_contains($detailHtml, 'Choose an option') && str_contains($detailHtml, $this->optionChoice->name),
-            'Option product details should render selector with option names'
+            str_contains($detailHtml, 'Choose an option')
+                && str_contains($detailHtml, $this->optionChoice->name)
+                && str_contains($detailHtml, showAmount($this->optionChoice->price)),
+            'Option product details should render selector with option names and visible pricing'
         );
 
         $this->record(
             'option.detail.requested.amount.visible',
             str_contains($detailHtml, 'Requested Amount'),
             'Option product details should render requested amount field for ranged options'
+        );
+
+        $this->record(
+            'option.detail.cleaned.layout',
+            str_contains($detailHtml, 'Continue to Checkout')
+                && !str_contains($detailHtml, route('product.reviews', $this->optionProduct->slug))
+                && !str_contains($detailHtml, route('product.comments', $this->optionProduct->slug))
+                && !str_contains($detailHtml, 'Live Preview'),
+            'Order product detail should focus on checkout without review, comment, or live preview links'
         );
 
         $this->record(
@@ -398,6 +409,7 @@ class CatalogRuntimeCheck
             'product_option_id' => $this->optionChoice->id,
             'requested_amount'  => 3,
             'request_note'      => 'Need the first 3 units',
+            'redirect_to'       => 'checkout',
         ]);
 
         $responseA = app(CartController::class)->add($addOptionRequest, $this->optionProduct->slug);
@@ -414,6 +426,13 @@ class CatalogRuntimeCheck
                 && $responseB instanceof RedirectResponse
                 && $cartItems->count() === 2,
             'Cart should accept both option-request and downloadable products'
+        );
+
+        $this->record(
+            'order.product.redirects.to.checkout',
+            $responseA instanceof RedirectResponse
+                && $responseA->getTargetUrl() === route('cart.checkout'),
+            'Order product add-to-cart flow should redirect directly to checkout when requested'
         );
 
         $placeOrderRequest = $this->makeRequest('POST', route('cart.checkout.submit'), [

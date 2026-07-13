@@ -1,3 +1,4 @@
+@php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
 <div class="product-card h-100">
     <div class="product-card__thumb">
         <a href="{{ route('product.details', $product->slug) }}" class="link" title="{{ __($product->title) }}">
@@ -44,15 +45,17 @@
         </div>
         <div class="flex-between align-items-end">
             <div class="product-card__rating">
-                @if (($product->total_review ?? 0) >= gs('min_reviews'))
+                @if (!$isOrderProduct && ($product->total_review ?? 0) >= gs('min_reviews'))
                     <div class="rating-list">
                         @php echo displayRating($product->avg_rating); @endphp
                     </div>
                 @endif
-                <div class="mt-1">
-                    <i class="las la-download"></i>
-                    <span class="product-card__sales">{{ $product->total_download }} {{ __(str()->plural('Download', $product->total_download)) }}</span>
-                </div>
+                @if (!$isOrderProduct)
+                    <div class="mt-1">
+                        <i class="las la-download"></i>
+                        <span class="product-card__sales">{{ $product->total_download }} {{ __(str()->plural('Download', $product->total_download)) }}</span>
+                    </div>
+                @endif
             </div>
             <div class="d-flex flex-column align-items-end gap-2">
                 @if ($product->managed_by_admin)
@@ -64,7 +67,8 @@
                         <form action="{{ route('cart.add', $product->slug) }}" method="POST">
                             @csrf
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn--base btn--sm mt-1">@lang('Buy Now')</button>
+                            <input type="hidden" name="redirect_to" value="{{ $isOrderProduct ? 'checkout' : 'cart' }}">
+                            <button type="submit" class="btn btn--base btn--sm mt-1">@lang($isOrderProduct ? 'Checkout' : 'Buy Now')</button>
                         </form>
                     @endif
                 @else
@@ -73,9 +77,13 @@
                     </a>
                 @endif
 
-                @php $hasDemo = !empty($product->demo_url); @endphp
-                <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
-                </a>
+                @if (!$isOrderProduct)
+                    @php $hasDemo = !empty($product->demo_url); @endphp
+                    <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
+                    </a>
+                @elseif ($product->managed_by_admin)
+                    <a href="{{ route('product.details', $product->slug) }}" class="btn btn-outline--light btn--sm">@lang('View Details')</a>
+                @endif
             </div>
         </div>
     </div>
