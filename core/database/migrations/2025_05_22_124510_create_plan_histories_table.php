@@ -11,8 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('plan_histories')) {
+            return;
+        }
+
         Schema::create('plan_histories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('plan_id')->default(0);
+            $table->decimal('amount', 28, 8)->default(0);
+            $table->string('history_type', 40)->default('0');
+            $table->string('remark', 40)->nullable();
             $table->timestamps();
         });
     }
