@@ -159,6 +159,38 @@
             }
         ]
     },
+    "catalog_products": {
+        "keyword": [
+            "Catalog",
+            "Admin Catalog",
+            "Catalog Products",
+            "Managed Products",
+            "Store Products"
+        ],
+        "title": "Catalog Products",
+        "icon": "las la-store",
+        "route_name": "admin.catalog.products.index",
+        "menu_active": [
+            "admin.catalog.products.index",
+            "admin.catalog.products.create",
+            "admin.catalog.products.edit"
+        ]
+    },
+    "catalog_orders": {
+        "keyword": [
+            "Catalog Orders",
+            "Store Orders",
+            "Customer Orders",
+            "Order Management"
+        ],
+        "title": "Catalog Orders",
+        "icon": "las la-shopping-cart",
+        "route_name": "admin.orders.index",
+        "menu_active": [
+            "admin.orders.index",
+            "admin.orders.show"
+        ]
+    },
     "review_comment": {
         "title": "Review & Comment",
         "icon": "las la-comments",

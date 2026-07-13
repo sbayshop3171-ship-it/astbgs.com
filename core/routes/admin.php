@@ -123,6 +123,20 @@ Route::middleware('admin')->group(function () {
         Route::post('toggle-feature/{productId}', 'toggleFeature')->name('feature.toggle');
     });
 
+    Route::controller('CatalogProductController')->prefix('catalog/products')->name('catalog.products.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('create', 'create')->name('create');
+        Route::post('store', 'store')->name('store');
+        Route::get('{id}/edit', 'edit')->name('edit');
+        Route::post('{id}/update', 'update')->name('update');
+    });
+
+    Route::controller('ManageOrderController')->prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('{id}', 'show')->name('show');
+        Route::post('{id}', 'update')->name('update');
+    });
+
     // Reviewer
     Route::controller('ManageReviewerController')->prefix('reviewers')->name('reviewer.')->group(function () {
         Route::get('/', 'allReviewers')->name('all');

@@ -34,8 +34,6 @@
             });
 
             $('.download-button').on('click', function() {
-                console.log(120);
-
                 setTimeout(() => {
                     $(this).not('[disabled]').addClass('disabled');
                 }, 2000);

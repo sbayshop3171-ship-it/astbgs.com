@@ -581,6 +581,14 @@ function generateUniqueProductSlug($title) {
     return $slug;
 }
 
+function generateOrderNumber() {
+    do {
+        $orderNumber = 'ORD-' . strtoupper(Str::random(10));
+    } while (\App\Models\Order::where('order_number', $orderNumber)->exists());
+
+    return $orderNumber;
+}
+
 function productFilePath($product, $colName) {
     $slug = $product->slug ?? '';
     $file = $product->$colName ?? '';
@@ -700,14 +708,18 @@ function hasDownloadProduct($type = 'daily') {
     if (!$userPlan) return false;
 
     if ($type === 'daily') {
-        $limit = $userPlan->daily_limit;
+        $limit = $userPlan->plan?->daily_limit;
         $from = now()->startOfDay();
     } elseif ($type === 'weekly') {
-        $limit = $userPlan->weekly_limit;
+        $limit = $userPlan->plan?->weekly_limit;
         $from = now()->startOfWeek();
     } else {
-        $limit = $userPlan->monthly_limit;
+        $limit = $userPlan->plan?->monthly_limit;
         $from = now()->startOfMonth();
+    }
+
+    if ($limit === null) {
+        return false;
     }
 
     $count = DownloadLog::where('user_id', auth()->id())

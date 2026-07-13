@@ -17,13 +17,18 @@ class ViserForm extends Component
     public $identifierValue;
     public $form;
     public $formData;
+    public $editData;
 
-    public function __construct($identifier, $identifierValue)
+    public function __construct($identifier, $identifierValue, $editData = [])
     {
         $this->identifier = $identifier;
         $this->identifierValue = $identifierValue;
         $this->form = Form::where($this->identifier, $this->identifierValue)->first();
         $this->formData = isset($this->form->form_data) ? $this->form->form_data : [];
+        $this->editData = collect($editData ?? [])->mapWithKeys(function ($item) {
+            $data = is_array($item) ? (object) $item : $item;
+            return [titleToKey($data->name ?? '') => $data->value ?? null];
+        })->all();
     }
 
     /**

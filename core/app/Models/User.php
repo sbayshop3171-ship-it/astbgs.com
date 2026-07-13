@@ -173,6 +173,16 @@ class User extends Authenticatable
         return $this->hasMany(Product::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class)->latest('id');
+    }
+
+    public function orderItems()
+    {
+        return $this->hasManyThrough(OrderItem::class, Order::class);
+    }
+
 
     public function favoriteProducts()
     {
@@ -208,6 +218,23 @@ class User extends Authenticatable
     public function isAuthor()
     {
         return $this->is_author == Status::YES;
+    }
+
+    public function hasPurchasedProduct($productId)
+    {
+        if ($this->earnings()->where('product_id', $productId)->exists()) {
+            return true;
+        }
+
+        return $this->orderItems()
+            ->where('product_id', $productId)
+            ->whereHas('order', function ($query) {
+                $query->whereIn('status', [
+                    Status::CATALOG_ORDER_PAID,
+                    Status::CATALOG_ORDER_PROCESSING,
+                    Status::CATALOG_ORDER_COMPLETED,
+                ]);
+            })->exists();
     }
 
     public function referrals()

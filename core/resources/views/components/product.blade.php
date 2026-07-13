@@ -25,9 +25,14 @@
                         </a>
                     </h6>
                     <div class="product-card__author">
-                        <a href="{{ route('user.profile', $product->author->username) }}" class="link">@lang('By') {{ __($product->author->fullname) }}</a>
-                        @if ($product->is_free)
-                            <span class="product-card__price">@lang('Free')</span>
+                        @if ($product->managed_by_admin)
+                            <span class="link">@lang('By') {{ __(gs('site_name')) }}</span>
+                            <span class="product-card__price">{{ $product->catalogPriceLabel }}</span>
+                        @else
+                            <a href="{{ route('user.profile', $product->author->username) }}" class="link">@lang('By') {{ __($product->author->fullname) }}</a>
+                            @if ($product->is_free)
+                                <span class="product-card__price">@lang('Free')</span>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -49,9 +54,25 @@
                     <span class="product-card__sales">{{ $product->total_download }} {{ __(str()->plural('Download', $product->total_download)) }}</span>
                 </div>
             </div>
-            @php $hasDemo = !empty($product->demo_url); @endphp
-            <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm mt-1 {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
-            </a>
+            <div class="d-flex flex-column align-items-end gap-2">
+                @if ($product->managed_by_admin)
+                    @if ($product->hasActiveOptions())
+                        <a href="{{ route('product.details', $product->slug) }}" class="btn btn--base btn--sm mt-1">
+                            @lang('Select Options')
+                        </a>
+                    @else
+                        <form action="{{ route('cart.add', $product->slug) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn--base btn--sm mt-1">@lang('Buy Now')</button>
+                        </form>
+                    @endif
+                @endif
+
+                @php $hasDemo = !empty($product->demo_url); @endphp
+                <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
+                </a>
+            </div>
         </div>
     </div>
 </div>

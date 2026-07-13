@@ -89,6 +89,18 @@
                                             </a>
                                         </li>
                                         <li class="profile-dropdown-list__item">
+                                            <a href="{{ route('cart.index') }}" class="profile-dropdown-list__link {{ menuActive('cart.index') }}">
+                                                <span class="icon"><i class="la la-shopping-cart"></i></span>
+                                                @lang('Cart')
+                                            </a>
+                                        </li>
+                                        <li class="profile-dropdown-list__item">
+                                            <a href="{{ route('user.orders.index') }}" class="profile-dropdown-list__link {{ menuActive('user.orders.*') }}">
+                                                <span class="icon"><i class="la la-receipt"></i></span>
+                                                @lang('My Orders')
+                                            </a>
+                                        </li>
+                                        <li class="profile-dropdown-list__item">
                                             <a href="{{ route('user.subscription.history') }}" class="profile-dropdown-list__link {{ menuActive('user.subscription.history') }} ">
                                                 <span class="icon"> <i class="la la-bell"></i></span>@lang('Subscription History')</a>
                                         </li>
@@ -100,13 +112,7 @@
                                             <a href="{{ route('user.author.free.download') }}" class="profile-dropdown-list__link {{ menuActive('user.author.free.download') }} ">
                                                 <span class="icon"> <i class="la la-gift"></i></span>@lang('Free Items')</a>
                                         </li>
-
                                         @if (auth()->check() && auth()->user()->isAuthor())
-                                            <li class="profile-dropdown-list__item">
-                                                <a href="{{ route('user.product.upload') }}" class="profile-dropdown-list__link {{ menuActive('user.product.upload') }}">
-                                                    <span class="icon"> <i class="la la-upload"></i></span>
-                                                    @lang('Upload Item')</a>
-                                            </li>
                                             <li class="profile-dropdown-list__item">
                                                 <a href="{{ route('user.withdraw.history') }}" class="profile-dropdown-list__link {{ menuActive('user.withdraw.*') }}">
                                                     <span class="icon"><i class="la la-bank"></i></span>

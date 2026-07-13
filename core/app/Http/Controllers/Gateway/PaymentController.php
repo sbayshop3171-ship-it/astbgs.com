@@ -9,6 +9,7 @@ use App\Lib\Referral;
 use App\Models\AdminNotification;
 use App\Models\Deposit;
 use App\Models\GatewayCurrency;
+use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserPlan;
@@ -39,19 +40,31 @@ class PaymentController extends Controller
         $request->validate([
             'gateway'  => 'required',
             'currency' => 'required',
-            'user_plan' => 'required',
+            'user_plan' => 'nullable|required_without:order_id',
+            'order_id'  => 'nullable|required_without:user_plan',
         ]);
 
         $user    = auth()->user();
+        $plan = null;
+        $order = null;
 
+        if ($request->filled('user_plan')) {
+            $plan = UserPlan::where('id', $request->user_plan)->where('user_id', auth()->id())->unpaid()->firstOrFail();
 
-        $plan = UserPlan::where('id', $request->user_plan)->where('user_id', auth()->id())->unpaid()->firstOrFail();
+            if (!$plan) {
+                $notify[] = ['error', 'Desire plan not found!'];
+                return back()->withNotify($notify);
+            }
 
-        if (!$plan) {
-            $notify[] = ['error', 'Desire plan not found!'];
-            return back()->withNotify($notify);
+            $amount = $plan->price;
+        } else {
+            $order = Order::where('id', $request->order_id)
+                ->where('user_id', auth()->id())
+                ->pendingPayment()
+                ->firstOrFail();
+
+            $amount = $order->total;
         }
-        $amount       = $plan->price;
 
         $gate = GatewayCurrency::whereHas('method', function ($gate) {
             $gate->where('status', Status::ENABLE);
@@ -74,7 +87,8 @@ class PaymentController extends Controller
 
         $data                  = new Deposit();
         $data->user_id         = $user->id;
-        $data->user_plan_id    = $plan->id;
+        $data->user_plan_id    = $plan?->id;
+        $data->order_id        = $order?->id;
         $data->method_code     = $gate->method_code;
         $data->method_currency = strtoupper($gate->currency);
         $data->amount          = $amount;
@@ -84,8 +98,8 @@ class PaymentController extends Controller
         $data->btc_amount      = 0;
         $data->btc_wallet      = "";
         $data->trx             = getTrx();
-        $data->success_url     = route('user.subscription.history');
-        $data->failed_url      = route('plans');
+        $data->success_url     = $order ? route('user.orders.show', $order->id) : route('user.subscription.history');
+        $data->failed_url      = $order ? route('user.orders.show', $order->id) : route('plans');
         $data->save();
         session()->put('Track', $data->trx);
         return to_route('user.deposit.confirm');
@@ -146,23 +160,22 @@ class PaymentController extends Controller
             $deposit->save();
 
             $user = User::find($deposit->user_id);
-            $user->balance += $deposit->amount;
-            $user->save();
-
             $methodName = $deposit->methodName();
 
-            $transaction               = new Transaction();
-            $transaction->user_id      = $deposit->user_id;
-            $transaction->amount       = $deposit->amount;
-            $transaction->post_balance = $user->balance;
-            $transaction->charge       = $deposit->charge;
-            $transaction->trx_type     = '+';
-            $transaction->details      = 'Payment by ' . $methodName;
-            $transaction->trx          = $deposit->trx;
-            $transaction->remark       = 'payment';
-            $transaction->save();
-
             if ($deposit->user_plan_id) {
+                $user->balance += $deposit->amount;
+                $user->save();
+
+                $transaction               = new Transaction();
+                $transaction->user_id      = $deposit->user_id;
+                $transaction->amount       = $deposit->amount;
+                $transaction->post_balance = $user->balance;
+                $transaction->charge       = $deposit->charge;
+                $transaction->trx_type     = '+';
+                $transaction->details      = 'Payment by ' . $methodName;
+                $transaction->trx          = $deposit->trx;
+                $transaction->remark       = 'payment';
+                $transaction->save();
 
                 $activePlan = UserPlan::where('user_id', $deposit->user_id)->active()->paid()->first();
                 if ($activePlan) {
@@ -199,11 +212,35 @@ class PaymentController extends Controller
                 }
             }
 
+            if ($deposit->order_id) {
+                $order = $deposit->order()->with('items')->first();
+                if ($order) {
+                    $order->payment_trx = $deposit->trx;
+                    $order->gateway_name = $methodName;
+                    $order->paid_at = now();
+                    $order->status = $order->items->every(fn($item) => $item->delivery_type === Status::PRODUCT_TYPE_DOWNLOADABLE)
+                        ? Status::CATALOG_ORDER_COMPLETED
+                        : Status::CATALOG_ORDER_PROCESSING;
+                    $order->save();
+
+                    $transaction               = new Transaction();
+                    $transaction->user_id      = $deposit->user_id;
+                    $transaction->amount       = $order->total;
+                    $transaction->post_balance = $user->balance;
+                    $transaction->charge       = $deposit->charge;
+                    $transaction->trx_type     = '-';
+                    $transaction->details      = 'Catalog order payment - ' . $order->order_number;
+                    $transaction->trx          = $deposit->trx;
+                    $transaction->remark       = 'catalog_purchase';
+                    $transaction->save();
+                }
+            }
+
             if (!$isManual) {
                 $adminNotification            = new AdminNotification();
                 $adminNotification->user_id   = $user->id;
                 $adminNotification->title     = 'Payment successful via ' . $methodName;
-                $adminNotification->click_url = urlPath('admin.deposit.successful');
+                $adminNotification->click_url = $deposit->order_id ? urlPath('admin.orders.show', $deposit->order_id) : urlPath('admin.deposit.successful');
                 $adminNotification->save();
             }
 
@@ -271,6 +308,10 @@ class PaymentController extends Controller
         ]);
 
         $notify[] = ['success', 'Your payment request has been taken'];
+        if ($data->order_id) {
+            return to_route('user.orders.show', $data->order_id)->withNotify($notify);
+        }
+
         return to_route('user.subscription.history')->withNotify($notify);
     }
 }

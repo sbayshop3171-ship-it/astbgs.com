@@ -4,7 +4,7 @@ $featureCategory = getContent('featured_category.content', true);
 $categories = App\Models\Category::active()
 ->withCount([
     'products' => function ($query) {
-        $query->approved()->allActive();
+        $query->catalogPublished();
     },
     ])
     ->featured()
@@ -26,4 +26,3 @@ $categories = App\Models\Category::active()
         @include('Template::partials.category_card', ['categories' => $categories])
     </div>
 </section>
-

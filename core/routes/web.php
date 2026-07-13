@@ -36,6 +36,18 @@ Route::controller('TicketController')->prefix('ticket')->name('ticket.')->group(
 
 Route::get('app/deposit/confirm/{hash}', 'Gateway\PaymentController@appDepositConfirm')->name('deposit.app.confirm');
 
+Route::controller('CartController')->prefix('cart')->name('cart.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('add/{slug}', 'add')->name('add');
+    Route::post('update', 'update')->name('update');
+    Route::post('remove/{cartKey}', 'remove')->name('remove');
+});
+
+Route::middleware('auth')->controller('CartController')->prefix('cart')->name('cart.')->group(function () {
+    Route::get('checkout', 'checkout')->name('checkout');
+    Route::post('checkout', 'placeOrder')->name('checkout.submit');
+});
+
 Route::controller('SiteController')->group(function () {
     Route::get('contact', 'contact')->name('contact');
     Route::post('contact', 'contactSubmit');

@@ -100,16 +100,13 @@
                     <div class="card-body p-4">
                         <div class="row justify-content-center">
                             <div class="col-lg-8">
-                                @php
-                                    $becomeAuthor = getContent('become_author.content', true)?->data_values;
-                                @endphp
                                 <div class="text-center">
-                                    <h3 class="text--base">{{ __($becomeAuthor?->heading ?? 'Become an Author') }}</h3>
-                                    <p class="mb-3">
-                                        {{ __($becomeAuthor?->details ?? 'Join our author community today') }}</p>
-                                    <a href="{{ route('user.author.form') }}" class="btn btn--base">
-                                        {{ __($becomeAuthor?->button_text ?? 'Apply Now') }}
-                                    </a>
+                                    <h3 class="text--base">@lang('Welcome to Your Account')</h3>
+                                    <p class="mb-3">@lang('Browse admin-managed catalog items, place orders, and track payments and downloads from one place.')</p>
+                                    <div class="d-flex justify-content-center flex-wrap gap-2">
+                                        <a href="{{ route('products') }}" class="btn btn--base">@lang('Browse Catalog')</a>
+                                        <a href="{{ route('user.orders.index') }}" class="btn btn-outline--base">@lang('My Orders')</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

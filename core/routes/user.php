@@ -81,6 +81,12 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('my/subscription', 'mySubscription')->name('my.subscription');
             });
 
+            Route::controller('OrderController')->prefix('orders')->name('orders.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('{id}', 'show')->name('show');
+                Route::get('{id}/pay', 'pay')->name('pay');
+            });
+
             //Profile setting
             Route::controller('ProfileController')->group(function () {
                 Route::get('profile-setting', 'profile')->name('profile.setting');
@@ -92,6 +98,7 @@ Route::middleware('auth')->name('user.')->group(function () {
 
 
             Route::get('product/download/{slug}', 'DownloadController@downloadProduct')->name('product.download');
+            Route::get('downloads/file/{orderItemId}/{fileId}', 'OrderController@downloadFile')->name('downloads.file');
 
             // product
             Route::controller('ProductController')->middleware('author')->name('product.')->prefix('product')->group(function () {

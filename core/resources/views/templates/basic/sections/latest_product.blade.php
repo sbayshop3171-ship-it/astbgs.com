@@ -4,10 +4,10 @@
     $latestProductContent = getContent('latest_product.content', true);
     $categories = Category::active()
         ->withWhereHas('products', function ($q) {
-            $q->approved()->allActive()->orderByDesc('id')->take(8);
+            $q->catalogPublished()->with('activeOptions')->orderByDesc('id')->take(8);
         })
         ->get();
-    $latestProducts = Product::with('author')->approved()->allActive()->orderByDesc('id')->limit(8)->get();
+    $latestProducts = Product::with(['author', 'activeOptions'])->catalogPublished()->orderByDesc('id')->limit(8)->get();
 @endphp
 
 

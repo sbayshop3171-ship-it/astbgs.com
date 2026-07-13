@@ -11,12 +11,12 @@ class UserPlan extends Model
 {
     public function scopePaid($query)
     {
-        $query->where('status', Status::PAID_SUBSCRIPTION);
+        $query->where('is_payment', Status::PAID_SUBSCRIPTION);
     }
 
     public function scopeUnpaid($query)
     {
-        $query->where('status', Status::UNPAID_SUBSCRIPTION);
+        $query->where('is_payment', Status::UNPAID_SUBSCRIPTION);
     }
 
     public function scopeActive($query)

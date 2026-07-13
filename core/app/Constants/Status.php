@@ -52,9 +52,22 @@ class Status
     const PERSONAL_LICENSE   = 1;
     const COMMERCIAL_LICENSE = 2;
 
+    const PRODUCT_TYPE_DOWNLOADABLE   = 'downloadable';
+    const PRODUCT_TYPE_OPTION_REQUEST = 'option_request';
+
+    const PRODUCT_AVAILABILITY_AVAILABLE   = 'available';
+    const PRODUCT_AVAILABILITY_LIMITED     = 'limited';
+    const PRODUCT_AVAILABILITY_UNAVAILABLE = 'unavailable';
+
     const ORDER_PAID     = 1;
     const ORDER_UNPAID   = 2;
     const ORDER_REFUNDED = 1;
+
+    const CATALOG_ORDER_PENDING_PAYMENT = 'pending_payment';
+    const CATALOG_ORDER_PAID            = 'paid';
+    const CATALOG_ORDER_PROCESSING      = 'processing';
+    const CATALOG_ORDER_COMPLETED       = 'completed';
+    const CATALOG_ORDER_CANCELLED       = 'cancelled';
 
     const PRODUCT_NO_UPDATE          = 0;
     const PRODUCT_UPDATE_PENDING     = 1;

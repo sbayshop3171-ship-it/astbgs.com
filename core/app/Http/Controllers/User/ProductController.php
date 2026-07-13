@@ -17,55 +17,31 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    protected function uploadsDisabledResponse()
+    {
+        $notify[] = ['error', 'Vendor item uploads are disabled. Products are now managed by the admin catalog only.'];
+        return to_route('home')->withNotify($notify);
+    }
 
     public function selectCategory()
     {
-        $pageTitle = 'Select Category';
-
-        $categories = Category::active()->whereHas('subcategories', function ($subcategory) {
-            $subcategory->active();
-        })->with(['subcategories' => function ($subcategory) {
-            $subcategory->active();
-        }])->get();
-
-        return view('Template::user.product.select_category', compact('pageTitle', 'categories'));
+        return $this->uploadsDisabledResponse();
     }
 
     public function upload()
     {
-        $categoryId    = request()->category;
-        $subCategoryId = request()->subcategory;
-        $isFree        = request()->is_free ?? 0;
-
-        if (!$categoryId || !$subCategoryId) {
-            return to_route('user.product.upload.category');
-        }
-
-        $categories = Category::active()->whereHas('subcategories', function ($subcategory) {
-            $subcategory->active();
-        })->with(['subcategories' => function ($subcategory) {
-            $subcategory->active();
-        }])->get();
-
-        $pageTitle   = 'Upload Product';
-        $category    = Category::active()->findOrFail($categoryId);
-        $subCategory = Subcategory::active()->where('category_id', $categoryId)->findOrFail($subCategoryId);
-        $form        = Form::where('id', $subCategory->form_id)->where('act', 'subcategory_attributes')->first();
-
-        return view('Template::user.product.upload', compact('pageTitle', 'isFree', 'form', 'categories'));
+        return $this->uploadsDisabledResponse();
     }
 
     public function edit($slug)
     {
-        $product   = Product::where('slug', $slug)->firstOrFail();
-        $pageTitle = 'Edit Product';
-        $form      = Form::where('id', $product->subcategory->form_id)->where('act', 'subcategory_attributes')->first();
-
-        return view('Template::user.product.edit', compact('pageTitle', 'form', 'product'));
+        return $this->uploadsDisabledResponse();
     }
 
     public function saveProduct(Request $request, $id = null)
     {
+        return $this->uploadsDisabledResponse();
+
         if (!$id) {
             $product          = new Product();
             $product->slug    = generateUniqueProductSlug($request->title);
@@ -189,6 +165,8 @@ class ProductController extends Controller
 
     public function productActivities($slug)
     {
+        return $this->uploadsDisabledResponse();
+
         $pageTitle = 'Item Activity Log';
         $product   = Product::where('status', '!=', Status::PRODUCT_HARD_REJECTED)->countComment()->where('slug', $slug)->firstOrFail();
 
@@ -199,6 +177,8 @@ class ProductController extends Controller
     }
 
     public function ajaxActivity($slug){
+        return response()->json(['html' => '', 'hasMore' => false]);
+
         if (!request()->ajax()) {
             return response()->json(['html' => '', 'hasMore' => false]);
         }
@@ -226,6 +206,8 @@ class ProductController extends Controller
 
     public function replyActivity(Request $request, $productId)
     {
+        return $this->uploadsDisabledResponse();
+
         $request->validate([
             'message' => 'required',
         ]);
@@ -340,6 +322,8 @@ class ProductController extends Controller
 
     public function commenting($slug)
     {
+        return $this->uploadsDisabledResponse();
+
         $product = Product::where('slug', $slug)->where('user_id', auth()->id())->firstOrFail();
 
         $product->comment_disable = !$product->comment_disable;

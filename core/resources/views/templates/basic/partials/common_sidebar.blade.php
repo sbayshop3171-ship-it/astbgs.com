@@ -1,6 +1,8 @@
 <div class="col-lg-4 ps-xxl-5">
     <div class="common-sidebar">
-        @if ($product->user_id !== auth()->id())
+        @if ($product->managed_by_admin)
+            @include('Template::partials.catalog_purchase_bar')
+        @elseif ($product->user_id !== auth()->id())
             @include('Template::partials.download_bar')
         @endif
 

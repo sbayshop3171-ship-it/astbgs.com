@@ -1,6 +1,6 @@
 @php
     $featureProductSection = getContent('featured_product.content', true);
-    $featuredProducts = \App\Models\Product::approved()->allActive()->featured()->with('author')->limit(4)->get();
+    $featuredProducts = \App\Models\Product::catalogPublished()->featured()->with(['author', 'activeOptions'])->limit(4)->get();
 @endphp
 
 <section class="featured-theme featured-products py-60">

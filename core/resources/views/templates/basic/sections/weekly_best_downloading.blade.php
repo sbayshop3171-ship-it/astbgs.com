@@ -1,8 +1,7 @@
 @php
     $weeklyBestSelling  = getContent('weekly_best_downloading.content', true);
-    $weeklyBestDownloadingProducts = \App\Models\Product::approved()
-        ->allActive()
-        ->with('author')
+    $weeklyBestDownloadingProducts = \App\Models\Product::catalogPublished()
+        ->with(['author', 'activeOptions'])
         ->whereHas('downloadLogs', function($query) {
             $query->whereDate('created_at', '>=', now()->startOfWeek());
         })

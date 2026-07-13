@@ -146,8 +146,8 @@ class AuthorController extends Controller {
         ]);
 
         try {
-            $downloadedProducts = auth()->user()->earnings()->pluck('product_id')->toArray();
-            $product           = Product::approved()->whereIn('id', $downloadedProducts)->findOrFail($productId);
+            abort_if(!auth()->user()->hasPurchasedProduct($productId), 404);
+            $product           = Product::approved()->findOrFail($productId);
             $user              = User::findOrFail($product->user_id);
             $review            = Review::where(['product_id' => $productId, 'user_id' => auth()->id()])->first();
             $isNewReview       = false;
@@ -208,9 +208,8 @@ class AuthorController extends Controller {
         ]);
 
         try {
-            $purchasedProducts = auth()->user()->earnings()->pluck('product_id')->toArray();
-
-            $product     = Product::approved()->whereIn('id', $purchasedProducts)->findOrFail($productId);
+            abort_if(!auth()->user()->hasPurchasedProduct($productId), 404);
+            $product     = Product::approved()->findOrFail($productId);
             $user        = User::findOrFail($product->user_id);
             $review      = Review::where(['product_id' => $productId, 'user_id' => auth()->id()])->first();
             $isNewReview = false;
@@ -819,31 +818,13 @@ class AuthorController extends Controller {
     }
 
     public function authorInfoForm() {
-        if (auth()->user()->is_author == Status::YES) {
-            $notify[] = ['error', 'You are already an author'];
-            return to_route('user.home')->withNotify($notify);
-        }
-
-        $pageTitle = 'Author Information';
-        return view('Template::user.author.form', compact('pageTitle'));
+        $notify[] = ['error', 'Author onboarding is disabled. Products are managed by the admin catalog only.'];
+        return to_route('user.home')->withNotify($notify);
     }
 
     public function authorInfoFormSubmit(Request $request) {
-        $form           = Form::where('act', 'author_info')->first();
-        $formData       = $form?->form_data ?? [];
-        $formProcessor  = new FormProcessor();
-        $validationRule = $formProcessor->valueValidation($formData);
-        if ($validationRule) {
-            $request->validate($validationRule);
-        }
-        $authorInfo        = $formProcessor->processFormData($request, $formData);
-        $user              = auth()->user();
-        $user->author_info = $authorInfo;
-
-        $user->is_author = Status::YES;
-        $user->save();
-
-        return to_route('user.home');
+        $notify[] = ['error', 'Author onboarding is disabled.'];
+        return to_route('user.home')->withNotify($notify);
     }
 
     protected function storeReportAttachments($reportId, $attachments) {

@@ -1,35 +1,58 @@
-<div class="common-sidebar__item">
-    <div class="common-sidebar__content">
-        <div class="author-info flex-column">
-            <div class="author-info__header">
-                <div class="author-info__thumb">
-                    <x-author-avatar :author="$author" />
-                </div>
-                <div class="author-info__content">
-                    <h6 class="author-info__name">
-                        <a href="{{ route('user.profile', $author?->username) }}">{{ __($author?->fullname) }}</a>
-                    </h6>
-                    <span class="author-info__date">@lang('Member since')
-                        {{ showDateTime($author->created_at, 'M, Y') }}</span>
-                    <x-rating :value="$author?->avg_rating ?? 0" style="2" :total_review="$author?->total_review ?? 0" />
+@if ($product->managed_by_admin)
+    <div class="common-sidebar__item">
+        <div class="common-sidebar__content">
+            <div class="author-info flex-column">
+                <div class="author-info__header">
+                    <div class="author-info__thumb">
+                        <img src="{{ siteLogo() }}" alt="@lang('Store Logo')">
+                    </div>
+                    <div class="author-info__content">
+                        <h6 class="author-info__name">{{ __(gs('site_name')) }}</h6>
+                        <span class="author-info__date">@lang('Admin managed catalog product')</span>
+                    </div>
                 </div>
             </div>
-            <div class="author-info__body">
-                <ul class="badge-list gap-3">
-                    @foreach ($author->authorLevels as $authorLevel)
-                        <li class="badge-list__item" data-bs-toggle="tooltip" data-bs-placement="top"
-                            data-bs-title="{{ $authorLevel->details }}">
-                            <img src="{{ getImage(getFilePath('authorLevel') . '/' . $authorLevel?->image) }}"
-                                alt="@lang('Author Level')" />
-                        </li>
-                    @endforeach
-                </ul>
+            <div class="common-sidebar__button">
+                <a href="{{ route('products') }}" class="btn btn--base w-100">
+                    @lang('Browse Catalog')
+                </a>
             </div>
-        </div>
-        <div class="common-sidebar__button">
-            <a href="{{ route('user.portfolio', $author?->username) }}" class="btn btn--base w-100">
-                @lang('View Portfolio')
-            </a>
         </div>
     </div>
-</div>
+@else
+    <div class="common-sidebar__item">
+        <div class="common-sidebar__content">
+            <div class="author-info flex-column">
+                <div class="author-info__header">
+                    <div class="author-info__thumb">
+                        <x-author-avatar :author="$author" />
+                    </div>
+                    <div class="author-info__content">
+                        <h6 class="author-info__name">
+                            <a href="{{ route('user.profile', $author?->username) }}">{{ __($author?->fullname) }}</a>
+                        </h6>
+                        <span class="author-info__date">@lang('Member since')
+                            {{ showDateTime($author->created_at, 'M, Y') }}</span>
+                        <x-rating :value="$author?->avg_rating ?? 0" style="2" :total_review="$author?->total_review ?? 0" />
+                    </div>
+                </div>
+                <div class="author-info__body">
+                    <ul class="badge-list gap-3">
+                        @foreach ($author->authorLevels as $authorLevel)
+                            <li class="badge-list__item" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-title="{{ $authorLevel->details }}">
+                                <img src="{{ getImage(getFilePath('authorLevel') . '/' . $authorLevel?->image) }}"
+                                    alt="@lang('Author Level')" />
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            <div class="common-sidebar__button">
+                <a href="{{ route('user.portfolio', $author?->username) }}" class="btn btn--base w-100">
+                    @lang('View Portfolio')
+                </a>
+            </div>
+        </div>
+    </div>
+@endif

@@ -133,9 +133,12 @@ class FileUploader {
 
     public function downloadFile($product, $orderItem = null, $column = 'file') {
         $filePath      = getFilePath('productFile') . productFilePath($product, $column);
+        return $this->downloadRelativeFile($filePath, $product->$column, $orderItem);
+    }
+
+    public function downloadRelativeFile($filePath, $downloadName, $orderItem = null) {
         $general       = gs();
         $currentServer = $general->file_server;
-
 
         if ($currentServer == Status::SERVER_CURRENT) {
 
@@ -143,11 +146,8 @@ class FileUploader {
                 $notify[] = ['error', 'File does not exist'];
                 return back()->withNotify($notify);
             }
-            if (!auth()->guard('reviewer')->check() && $orderItem != NULL) {
-                $orderItem->downloads = 1;
-                $orderItem->save();
-            }
-            return response()->download($filePath);
+            $this->markDownloaded($orderItem);
+            return response()->download($filePath, $downloadName);
         } else {
             try {
                 if ($currentServer == Status::SERVER_WASABI) {
@@ -178,7 +178,7 @@ class FileUploader {
                     $downloadPath = tempnam(sys_get_temp_dir(), 'ftp_download_');
                     if (ftp_get($ftpConnection, $downloadPath, $data['root'] . '/' . $filePath, FTP_BINARY)) {
                         header('Content-type: application/octet-stream');
-                        header("Content-Disposition: attachment; filename=" . $product->$column);
+                        header('Content-Disposition: attachment; filename=' . $downloadName);
                     }
                 } else {
                     $endpoint = $general->$server->endpoint;
@@ -196,22 +196,37 @@ class FileUploader {
                     ]);
                     $downloadPath =  (string) $s3Client->createPresignedRequest($command, '+1 hour')->getUri();
                     header('Content-type: application/octet-stream');
-                    header("Content-Disposition: attachment; filename=" . $product->$column);
+                    header('Content-Disposition: attachment; filename=' . $downloadName);
                 }
 
                 while (ob_get_level()) {
                     ob_end_clean();
                 }
 
-                if (!auth()->guard('reviewer')->check() && $orderItem != NULL) {
-                    $orderItem->downloads = 1;
-                    $orderItem->save();
-                }
+                $this->markDownloaded($orderItem);
 
                 return readfile($downloadPath);
             } catch (\Exception $e) {
                 $this->error = true;
             }
+        }
+    }
+
+    protected function markDownloaded($orderItem = null) {
+        if (auth()->guard('reviewer')->check() || $orderItem == null) {
+            return;
+        }
+
+        if (isset($orderItem->download_count)) {
+            $orderItem->download_count = ($orderItem->download_count ?? 0) + 1;
+            $orderItem->last_downloaded_at = now();
+            $orderItem->save();
+            return;
+        }
+
+        if (isset($orderItem->downloads)) {
+            $orderItem->downloads = 1;
+            $orderItem->save();
         }
     }
 }

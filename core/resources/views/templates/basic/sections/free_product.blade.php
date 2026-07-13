@@ -1,12 +1,11 @@
 @php
     $freeProduct = getContent('free_product.content', true);
-    $freeProducts = \App\Models\Product::approved()
-        ->allActive()
-        ->with('author')
+    $freeProducts = \App\Models\Product::catalogPublished()
+        ->with(['author', 'activeOptions'])
         ->withCount(['downloadLogs as total_download'])
         ->groupBy('products.id')
         ->orderBy('total_download', 'DESC')
-        ->where('is_free', Status::ENABLE)
+        ->where('base_price', 0)
         ->limit(10)
         ->get();
 @endphp

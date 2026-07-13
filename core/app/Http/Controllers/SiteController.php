@@ -50,7 +50,7 @@ class SiteController extends Controller {
         $categories = Category::active()
             ->withCount([
                 'products' => function ($query) {
-                    $query->allActive()->approved();
+                    $query->catalogPublished();
                 },
             ])->orderByDesc('products_count')->get();
         $sections    = Page::where('tempname', activeTemplate())->where('slug', 'category')->first();
@@ -73,7 +73,7 @@ class SiteController extends Controller {
     public function products() {
         $request = request();
         $pageTitle = "All Items";
-        $query = Product::approved()->allActive();
+        $query = Product::with(['author', 'activeOptions'])->catalogPublished();
         $products = $this->filterPorducts($query);
 
         // Handle AJAX
@@ -84,7 +84,7 @@ class SiteController extends Controller {
         }
 
         $ratings    = Rating::get();
-        $categories = Category::active()->whereHas('products', fn($q) => $q->approved())->get();
+        $categories = Category::active()->whereHas('products', fn($q) => $q->catalogPublished())->get();
 
         return view('Template::products', compact(
             'pageTitle',
@@ -109,7 +109,7 @@ class SiteController extends Controller {
             $pageTitle   = $category->name;
         }
 
-        $products = Product::approved()->allActive()
+        $products = Product::with(['author', 'activeOptions'])->catalogPublished()
             ->where('category_id', $category->id)
             ->when($subcategory, function ($query) use ($subcategory) {
                 $query->where('subcategory_id', $subcategory->id);
@@ -180,7 +180,7 @@ class SiteController extends Controller {
                 ->when($sortBy === 'new_item', fn($q) => $q->orderByDesc('created_at'));
         }
 
-        return $query->with(['reviews', 'users', 'author'])
+        return $query->with(['reviews', 'users', 'author', 'activeOptions'])
             ->orderBy('id', 'desc')
             ->paginate(getPaginate(12));
     }
@@ -190,17 +190,21 @@ class SiteController extends Controller {
         $pageTitle = "Free Items";
 
         $categories  = Category::active()->whereHas('products', function ($query) {
-            $query->approved()->where('is_free', Status::YES);
+            $query->catalogPublished()->where('base_price', 0);
         })->get();
 
-        $products  = Product::with('author')->searchable(['title'])->approved()->allActive()->where('is_free', Status::ENABLE)->orderBy('total_download', 'DESC')->paginate(getPaginate(16));
+        $products  = Product::with(['author', 'activeOptions'])->searchable(['title'])->catalogPublished()->where('base_price', 0)->orderBy('total_download', 'DESC')->paginate(getPaginate(16));
         return view('Template::free_products', compact('pageTitle', 'categories', 'products'));
     }
 
     public function productDetails($slug) {
-        $product = Product::with('author')->countComment()->where(['slug' => $slug])->firstOrFail();
+        $product = Product::with(['author', 'activeOptions', 'activeFiles'])->countComment()->where(['slug' => $slug])->firstOrFail();
 
         if (in_array($product->status, [Status::PRODUCT_PERMANENT_DOWN, Status::PRODUCT_HARD_REJECTED])) {
+            abort(404);
+        }
+
+        if ($product->managed_by_admin && (!$product->is_published || $product->availability_status === Status::PRODUCT_AVAILABILITY_UNAVAILABLE)) {
             abort(404);
         }
 

@@ -4,7 +4,7 @@
         <div class="row justify-content-center">
             <div class="col-xxl-9 col-xl-10 col-lg-11">
 
-                @if (userActivePlan())
+                @if (isset($plan) && userActivePlan())
                     @php
                         $userPlan = userActivePlan();
                         $planName = $userPlan?->plan?->name ?? '';
@@ -16,7 +16,12 @@
                 <form action="{{ route('user.deposit.insert') }}" method="post" class="deposit-form">
                     @csrf
                     <input type="hidden" name="currency">
-                    <input type="hidden" name="user_plan" value="{{ $plan->id }}">
+                    @if(isset($plan))
+                        <input type="hidden" name="user_plan" value="{{ $plan->id }}">
+                    @endif
+                    @if(isset($order))
+                        <input type="hidden" name="order_id" value="{{ $order->id }}">
+                    @endif
                     <div class="gateway-card">
                         <div class="row justify-content-center gy-sm-4 gy-3">
                             <div class="col-md-6">
@@ -56,10 +61,11 @@
                                             <p class="text mb-0">@lang('Amount')</p>
                                         </div>
                                         <div class="deposit-info__input">
-                                            <p class="fw-bold">{{ showAmount($plan->price) }}</p>
+                                            @php $payableAmount = isset($order) ? $order->total : $plan->price; @endphp
+                                            <p class="fw-bold">{{ showAmount($payableAmount) }}</p>
                                             <div class="deposit-info__input-group input-group">
                                                 <input type="hidden" class="amount" name="amount"
-                                                    value="{{ $plan->price }}" autocomplete="off">
+                                                    value="{{ $payableAmount }}" autocomplete="off">
                                             </div>
                                         </div>
                                     </div>
@@ -163,13 +169,13 @@
             function gatewayChange() {
                 let gatewayElement = $('.gateway-input:checked');
                 let methodCode = gatewayElement.val();
+                gateway = gatewayElement.data('gateway');
 
                 if (methodCode == 'wallet') {
                     $('.hideInfo').addClass('d-none');
                     $('hr').css('margin-bottom', 0);
                 } else {
                     $('.hideInfo').removeClass('d-none');
-                    gateway = gatewayElement.data('gateway');
                     minAmount = gatewayElement.data('min-amount');
                     maxAmount = gatewayElement.data('max-amount');
                 }

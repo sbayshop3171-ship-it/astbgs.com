@@ -27,6 +27,11 @@ class Deposit extends Model
     {
         return $this->belongsTo(UserPlan::class);
     }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
  
     public function methodName(){
         if ($this->method_code < 5000) {

@@ -11,7 +11,7 @@
                           <h6 class="author-reply__name">
                               <a href="{{ route('user.profile', $comment?->user->username) }}">{{ $comment?->user?->fullname }}</a>
                           </h6>
-                          @if ($comment->user->downloadLog()->where('product_id', $product->id)->count())
+                          @if ($comment->user->hasPurchasedProduct($product->id))
                               <small>@lang('Downloaded')</small>
                           @endif
                       </div>

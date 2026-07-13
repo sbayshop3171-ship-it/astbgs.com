@@ -8,7 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
 
 class Product extends Model {
-    protected $casts = ['attribute_info' => 'object', 'tags' => 'object'];
+    protected $casts = [
+        'attribute_info'   => 'object',
+        'tags'             => 'object',
+        'managed_by_admin' => 'boolean',
+        'is_published'     => 'boolean',
+        'base_price'       => 'decimal:2',
+    ];
 
     public function getMyProductAttribute() {
         return auth()->id() == $this->getAttribute('user_id');
@@ -32,7 +38,11 @@ class Product extends Model {
     }
 
     public function author() {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->withDefault(function ($user) {
+            $user->firstname = gs('site_name');
+            $user->lastname  = '';
+            $user->username  = 'catalog';
+        });
     }
 
     public function scopePending($query) {
@@ -52,9 +62,23 @@ class Product extends Model {
             $q->active();
         })->whereHas('subcategory', function ($q) {
             $q->active();
-        })->whereHas('author', function ($q) {
-            $q->active();
+        })->where(function ($q) {
+            $q->where('managed_by_admin', Status::YES)->orWhereHas('author', function ($authorQuery) {
+                $authorQuery->active();
+            });
         });
+    }
+
+    public function scopeCatalogManaged($query) {
+        return $query->where('managed_by_admin', Status::YES);
+    }
+
+    public function scopeCatalogPublished($query) {
+        return $query->catalogManaged()
+            ->where('is_published', Status::YES)
+            ->where('availability_status', '!=', Status::PRODUCT_AVAILABILITY_UNAVAILABLE)
+            ->approved()
+            ->allActive();
     }
 
     public function scopeApproved($query) {
@@ -115,6 +139,22 @@ class Product extends Model {
 
     public function productData() {
         return $this->hasMany(ProductData::class, 'product_id', 'id');
+    }
+
+    public function options() {
+        return $this->hasMany(ProductOption::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function activeOptions() {
+        return $this->hasMany(ProductOption::class)->where('is_active', Status::YES)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function files() {
+        return $this->hasMany(ProductFile::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function activeFiles() {
+        return $this->hasMany(ProductFile::class)->where('is_active', Status::YES)->orderBy('sort_order')->orderBy('id');
     }
 
     public function reviews() {
@@ -200,6 +240,50 @@ class Product extends Model {
             }
             return $html;
         });
+    }
+
+    public function getCatalogActionLabelAttribute() {
+        return $this->hasActiveOptions() ? 'Select options' : 'Buy now';
+    }
+
+    public function getCatalogPriceLabelAttribute() {
+        if (!$this->managed_by_admin) {
+            return $this->is_free ? trans('Free') : null;
+        }
+
+        $options = $this->relationLoaded('activeOptions') ? $this->activeOptions : $this->activeOptions()->get();
+
+        if ($options->isNotEmpty()) {
+            $min = $options->min('price');
+            $max = $options->max('price');
+
+            if ((float) $min === (float) $max) {
+                return showAmount($min);
+            }
+
+            return showAmount($min) . ' - ' . showAmount($max);
+        }
+
+        return showAmount($this->base_price ?? 0);
+    }
+
+    public function hasActiveOptions(): bool {
+        if ($this->relationLoaded('activeOptions')) {
+            return $this->activeOptions->isNotEmpty();
+        }
+
+        return $this->activeOptions()->exists();
+    }
+
+    public function visibleFilesForOption($optionId = null) {
+        return $this->activeFiles()
+            ->when($optionId, function ($query) use ($optionId) {
+                $query->where(function ($fileQuery) use ($optionId) {
+                    $fileQuery->whereNull('product_option_id')->orWhere('product_option_id', $optionId);
+                });
+            }, function ($query) {
+                $query->whereNull('product_option_id');
+            });
     }
 
 
