@@ -1,0 +1,292 @@
+{
+    "banner": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Banner Section",
+        "content": {
+            "images": {
+                "background_image": {
+                    "size": "3800x1180"
+                }
+            },
+            "title": "text",
+            "subtitle": "text",
+            "button_one": "text",
+            "button_two": "text",
+            "button_three": "text",
+            "search_placeholder": "text"
+        }
+    },
+    "membership_plan": {
+        "builder": true,
+        "name": "Membership Plan Section",
+        "content": {
+            "heading": "text",
+            "subheading": "text",
+            "question": "text",
+            "content": "text"
+        }
+    },
+    "collection_definition": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Collection Definition",
+        "content": {
+            "heading": "text",
+            "details": "text"
+        }
+    },
+    "upload_term": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Upload Term",
+        "content": {
+            "details": "text"
+        }
+    },
+    "become_author": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Become an Author",
+        "content": {
+            "heading": "text",
+            "details": "text",
+            "button_text": "text"
+        }
+    },
+
+    "featured_category": {
+        "builder": true,
+        "name": "Featured Category Section",
+        "content": {
+            "heading": "text"
+        }
+    },
+    "featured_product": {
+        "builder": true,
+        "name": "Featured Product Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "1200x860"
+                }
+            },
+            "title": "text",
+            "subtitle": "text"
+        }
+    },
+    "featured_author": {
+        "builder": true,
+        "name": "Featured Author Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "1200x840"
+                }
+            }
+        }
+    },
+    "latest_product": {
+        "builder": true,
+        "name": "Latest Product Section",
+        "content": {
+            "title": "text",
+            "subtitle": "text"
+        }
+    },
+    "marketplace": {
+        "builder": true,
+        "name": "Marketplace Section",
+        "content": {
+             "images": {
+                "image": {
+                    "size": "1270x940"
+                }
+            },
+            "title": "text",
+            "subtitle": "text"
+        },
+         "element": {
+            "content": "text",
+            "modal": true
+        }
+    },
+    "weekly_best_downloading": {
+        "builder": true,
+        "name": "Weekly Best Downloading",
+        "content": {
+            "title": "text"
+        }
+    },
+    "free_product": {
+        "builder": true,
+        "name": "Free Product",
+        "content": {
+            "title": "text"
+        }
+    },
+    "cta": {
+        "builder": true,
+        "name": "CTA Section",
+        "content": {
+            "title": "text",
+            "subtitle": "text",
+            "button_name": "text"
+        },
+        "element": {
+            "images": {
+                "image": {
+                    "size": "90x90"
+                }
+            },
+            "modal": true
+        }
+    },
+    "additional_benefit": {
+        "builder": true,
+        "name": "Benefit Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "1270x940"
+                }
+            },
+            "title": "text",
+            "subtitle": "text"
+        },
+        "element": {
+            "images": {
+                "image": {
+                    "size": "60x50"
+                }
+            },
+            "title": "text",
+            "subtitle": "textarea",
+            "modal": true
+        }
+    },
+    "login": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Login Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "1330x890"
+                },
+                "icon_image": {
+                    "size": "30x20"
+                }
+            },
+            "heading": "text",
+            "title": "text",
+            "subtitle": "text",
+            "icon_title": "text",
+            "icon_subtitle": "text"
+        }
+    },
+    "register": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Register Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "1330x890"
+                },
+                "icon_image": {
+                    "size": "30x20"
+                }
+            },
+            "heading": "text",
+            "title": "text",
+            "subtitle": "text",
+            "icon_title": "text",
+            "icon_subtitle": "text"
+        }
+    },
+    "policy_pages": {
+        "builder": true,
+        "no_selection": true,
+        "hide_builder": true,
+        "name": "Policy Pages",
+        "element": {
+            "title": "text",
+            "slug": "title",
+            "details": "textarea-nic",
+            "modal": false
+        }
+    },
+
+    "social_icon": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Social Icons",
+        "element": {
+            "title": "text",
+            "social_icon": "icon",
+            "url": "text",
+            "modal": false
+        }
+    },
+    "contact_us": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Contact Us",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "1000x845"
+                }
+            },
+            "heading": "text",
+            "subheading": "text",
+            "phone_number": "text",
+            "location_address": "text",
+            "email_address": "text"
+        }
+    },
+    "faq": {
+        "builder": true,
+        "name": "Faq Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "900x900"
+                }
+            },
+            "heading": "text",
+            "subheading": "text"
+        },
+        "element": {
+            "question": "text",
+            "answer": "textarea",
+            "modal": true
+        }
+    },
+    "ban": {
+        "builder": true,
+        "no_selection": true,
+        "name": "Ban Section",
+        "content": {
+            "images": {
+                "image": {
+                    "size": "220x220"
+                }
+            },
+            "title": "text",
+            "heading": "text",
+            "subheading": "text"
+        }
+    },
+    "kyc": {
+        "builder": true,
+        "no_selection": true,
+        "name": "KYC Content",
+        "content": {
+            "required": "text",
+            "pending": "text",
+            "reject": "text"
+        }
+    }
+}

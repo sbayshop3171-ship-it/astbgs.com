@@ -1,0 +1,57 @@
+<div class="product-card h-100">
+    <div class="product-card__thumb">
+        <a href="{{ route('product.details', $product->slug) }}" class="link" title="{{ __($product->title) }}">
+            <img src="{{ getImage(getFilePath('productInlinePreview') . productFilePath($product, 'inline_preview_image'), getFileSize('productInlinePreview')) }}" alt="@lang('Product Image')">
+        </a>
+        @if ($product->isTrending())
+            @php
+                $trendingIcon = public_path('assets/images/trending.svg');
+            @endphp
+            <span class="icon">
+                {!! is_file($trendingIcon) ? file_get_contents($trendingIcon) : '' !!}
+            </span>
+        @endif
+        <div class="collection-list">
+            <x-product-save :product="$product" />
+        </div>
+    </div>
+    <div class="product-card__content">
+        <div class="product-card__content-inner">
+            <div class="product-card__top w-100">
+                <div class="product-card-title-wrapper">
+                    <h6 class="product-card__title">
+                        <a href="{{ route('product.details', $product->slug) }}" class="link border-effect">
+                            {{ __($product->title) }}
+                        </a>
+                    </h6>
+                    <div class="product-card__author">
+                        <a href="{{ route('user.profile', $product->author->username) }}" class="link">@lang('By') {{ __($product->author->fullname) }}</a>
+                        @if ($product->is_free)
+                            <span class="product-card__price">@lang('Free')</span>
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+            <div class="collection-list list-style">
+                <x-product-save :product="$product" />
+            </div>
+        </div>
+        <div class="flex-between align-items-end">
+            <div class="product-card__rating">
+                @if (($product->total_review ?? 0) >= gs('min_reviews'))
+                    <div class="rating-list">
+                        @php echo displayRating($product->avg_rating); @endphp
+                    </div>
+                @endif
+                <div class="mt-1">
+                    <i class="las la-download"></i>
+                    <span class="product-card__sales">{{ $product->total_download }} {{ __(str()->plural('Download', $product->total_download)) }}</span>
+                </div>
+            </div>
+            @php $hasDemo = !empty($product->demo_url); @endphp
+            <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm mt-1 {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
+            </a>
+        </div>
+    </div>
+</div>
