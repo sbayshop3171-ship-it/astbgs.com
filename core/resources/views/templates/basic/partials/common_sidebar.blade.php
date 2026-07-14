@@ -1,7 +1,6 @@
-@php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
-
-<div class="col-lg-4 ps-xxl-5 {{ $isOrderProduct ? 'order-product-sidebar-column' : '' }}">
-    <div class="common-sidebar {{ $isOrderProduct ? 'order-product-sidebar' : '' }}">
+<div class="col-lg-4 ps-xxl-5">
+    @php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
+    <div class="common-sidebar">
         @if ($product->managed_by_admin)
             @include('Template::partials.catalog_purchase_bar')
         @elseif ($product->user_id !== auth()->id())

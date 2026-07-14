@@ -9,15 +9,10 @@
     </div>
 @endif
 
-<div class="common-sidebar__item mb-4 {{ $isOrderProduct ? 'order-product-info-wrap' : '' }}">
-    <h6 class="common-sidebar__title">
-        @if ($isOrderProduct)
-            <span class="order-product-title-kicker d-block mb-2">@lang('Specifications')</span>
-        @endif
-        @lang($isOrderProduct ? 'Order Information' : 'Product Information')
-    </h6>
-    <div class="common-sidebar__content {{ $isOrderProduct ? 'order-product-info-card' : '' }}">
-        <ul class="product-info {{ $isOrderProduct ? 'product-info--order' : '' }}">
+<div class="common-sidebar__item mb-4">
+    <h6 class="common-sidebar__title">@lang($isOrderProduct ? 'Order Information' : 'Product Information')</h6>
+    <div class="common-sidebar__content">
+        <ul class="product-info">
             @if ($product->managed_by_admin)
                 <li class="product-info__item">
                     <span class="product-info__title">@lang('Type')</span>
@@ -75,9 +70,9 @@
             @if (count((array) ($product->tags ?? [])))
                 <li class="product-info__item">
                     <span class="product-info__title">@lang('Tag')</span>
-                    <div class="product-info__content {{ $isOrderProduct ? 'product-info__tags' : '' }}">
+                    <div class="product-info__content">
                         @foreach (($product->tags ?? []) as $tag)
-                            <a href="{{ route('products', ['search' => $tag]) }}">{{ __($tag) }}</a>@if(!$isOrderProduct && !$loop->last), @endif
+                            <a href="{{ route('products', ['search' => $tag]) }}">{{ __($tag) }}</a>@if(!$loop->last), @endif
                         @endforeach
                     </div>
                 </li>

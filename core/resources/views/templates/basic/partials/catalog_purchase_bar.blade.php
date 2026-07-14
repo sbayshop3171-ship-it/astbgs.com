@@ -13,51 +13,21 @@
 
 <div class="common-sidebar__item">
     <div class="common-sidebar__content {{ $isOrderProduct ? 'order-purchase-card' : '' }}">
-        @if ($isOrderProduct)
-            <div class="order-purchase-card__hero">
-                <div>
-                    <span class="order-purchase-card__eyebrow">@lang('Service Checkout')</span>
-                    <h4 class="catalog-price-heading">
-                        @if ($hasOptions)
-                            @lang('Select an option to see price')
-                        @else
-                            {{ $product->catalogPriceLabel }}
-                        @endif
-                    </h4>
-                    <p class="mb-0 order-purchase-card__lead">
-                        @lang('Select the service plan that fits this request, then continue with a polished checkout flow.')
-                    </p>
-                </div>
-                <span class="badge badge--{{ $availabilityClass }}">{{ __(ucfirst($product->availability_status)) }}</span>
-            </div>
-
-            <div class="order-purchase-steps">
-                <div class="order-purchase-step">
-                    <span>1</span>
-                    <p>@lang('Choose a service option that matches the order')</p>
-                </div>
-                <div class="order-purchase-step">
-                    <span>2</span>
-                    <p>@lang('Add quantity and a short note if needed')</p>
-                </div>
-                <div class="order-purchase-step">
-                    <span>3</span>
-                    <p>@lang('Continue to secure checkout and confirm the request')</p>
-                </div>
-            </div>
-        @else
-            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                <div>
-                    <h4 class="mb-1 catalog-price-heading">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+            <div>
+                <h4 class="mb-1 catalog-price-heading">
+                    @if ($isOrderProduct && $hasOptions)
+                        @lang('Select an option to see price')
+                    @else
                         {{ $product->catalogPriceLabel }}
-                    </h4>
-                    <p class="mb-0 text-muted small">
-                        @lang('Secure cart and checkout flow')
-                    </p>
-                </div>
-                <span class="badge badge--{{ $availabilityClass }}">{{ __(ucfirst($product->availability_status)) }}</span>
+                    @endif
+                </h4>
+                <p class="mb-0 text-muted small">
+                    @lang($isOrderProduct ? 'Simple service checkout for this product' : 'Secure cart and checkout flow')
+                </p>
             </div>
-        @endif
+            <span class="badge badge--{{ $availabilityClass }}">{{ __(ucfirst($product->availability_status)) }}</span>
+        </div>
 
         @if ($product->product_type === \App\Constants\Status::PRODUCT_TYPE_DOWNLOADABLE)
             <div class="alert alert--info mb-3 py-2 px-3">
@@ -71,8 +41,7 @@
             </div>
         @endif
 
-        <form action="{{ route('cart.add', $product->slug) }}" method="POST" id="catalog-purchase-form-{{ $product->id }}"
-            class="{{ $isOrderProduct ? 'order-product-form' : '' }}">
+        <form action="{{ route('cart.add', $product->slug) }}" method="POST" id="catalog-purchase-form-{{ $product->id }}">
             @csrf
             <input type="hidden" name="redirect_to" value="{{ $isOrderProduct ? 'checkout' : 'cart' }}">
 
@@ -92,7 +61,7 @@
                     </select>
                 </div>
 
-                <div class="border rounded p-3 mb-3 d-none option-meta-box {{ $isOrderProduct ? 'order-option-summary' : '' }}">
+                <div class="border rounded p-3 mb-3 d-none option-meta-box">
                     <div class="small mb-2"><strong>@lang('Price:')</strong> <span class="selected-price">{{ $product->catalogPriceLabel }}</span></div>
                     <div class="small mb-2"><strong>@lang('Pricing Type:')</strong> <span class="selected-pricing-type">@lang('Fixed Price')</span></div>
                     <div class="small mb-2 d-none option-range-text"><strong>@lang('Allowed Range:')</strong> <span class="selected-range"></span></div>
