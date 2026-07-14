@@ -26,18 +26,64 @@
     @endif
 
     @if ($isOrderProduct)
-        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-            <div>
-                <h5 class="product-details__title mb-2">{{ __($product->title) }}</h5>
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge badge--dark">@lang('Type'): {{ __($product->productTypeLabel) }}</span>
-                    <span class="badge badge--secondary">@lang('Category'): {{ __($product->category?->name) }}</span>
-                    <span class="badge badge--secondary">@lang('Subcategory'): {{ __($product->subcategory?->name) }}</span>
-                    <span class="badge badge--success">@lang('Available'): {{ __(ucfirst($product->availability_status ?? 'available')) }}</span>
+        @php
+            $activeOptions = $product->relationLoaded('activeOptions') ? $product->activeOptions : $product->activeOptions()->get();
+            $summaryText = trim(preg_replace('/\s+/', ' ', strip_tags(html_entity_decode($product->description))));
+            $summaryText = \Illuminate\Support\Str::limit($summaryText, 185);
+        @endphp
+
+        <div class="order-product-hero">
+            <div class="order-product-hero__content">
+                <span class="order-product-hero__eyebrow">@lang('Premium Support Service')</span>
+                <h1 class="product-details__title order-product-hero__title">{{ __($product->title) }}</h1>
+                @if ($summaryText)
+                    <p class="order-product-hero__summary">{{ $summaryText }}</p>
+                @endif
+
+                <div class="order-product-hero__chips">
+                    <span class="order-product-chip">
+                        <strong>@lang('Type')</strong>
+                        <span>{{ __($product->productTypeLabel) }}</span>
+                    </span>
+                    <span class="order-product-chip">
+                        <strong>@lang('Category')</strong>
+                        <span>{{ __($product->category?->name) }}</span>
+                    </span>
+                    <span class="order-product-chip">
+                        <strong>@lang('Subcategory')</strong>
+                        <span>{{ __($product->subcategory?->name) }}</span>
+                    </span>
+                    <span class="order-product-chip">
+                        <strong>@lang('Availability')</strong>
+                        <span>{{ __(ucfirst($product->availability_status ?? 'available')) }}</span>
+                    </span>
+                </div>
+
+                <div class="order-product-hero__stats">
+                    <div class="order-product-stat">
+                        <span class="order-product-stat__label">@lang('Service Options')</span>
+                        <strong>{{ $activeOptions->count() ?: 1 }}</strong>
+                    </div>
+                    <div class="order-product-stat">
+                        <span class="order-product-stat__label">@lang('Price Range')</span>
+                        <strong>{{ $product->catalogPriceLabel }}</strong>
+                    </div>
+                    <div class="order-product-stat">
+                        <span class="order-product-stat__label">@lang('Last Updated')</span>
+                        <strong>{{ showDateTime($product->last_updated, 'd M Y') }}</strong>
+                    </div>
                 </div>
             </div>
-            <div class="product-details-top__right flex-align">
-                @include('Template::user.product.social_share')
+
+            <div class="order-product-hero__aside">
+                <span class="order-product-hero__badge">{{ __(ucfirst($product->availability_status ?? 'available')) }}</span>
+                <div>
+                    <h6>@lang('Built for smooth, secure service orders')</h6>
+                    <p>@lang('Pick the right service option, add a quick note, and move to checkout with a cleaner premium flow.')</p>
+                </div>
+                <div class="order-product-hero__actions">
+                    @include('Template::user.product.social_share')
+                </div>
             </div>
         </div>
     @else
