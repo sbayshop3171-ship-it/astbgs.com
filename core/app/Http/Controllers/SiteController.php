@@ -50,9 +50,11 @@ class SiteController extends Controller {
         $categories = Category::active()
             ->withCount([
                 'products' => function ($query) {
-                    $query->storefrontVisible();
+                    $query->catalogPublished();
                 },
-            ])->orderByDesc('products_count')->get();
+            ])->having('products_count', '>', 0)
+            ->orderByDesc('products_count')
+            ->get();
         $sections    = Page::where('tempname', activeTemplate())->where('slug', 'category')->first();
         $seoContents = $sections->seo_content;
         $seoImage    = $seoContents?->image ? getImage(getFilePath('seo') . '/' . $seoContents?->image, getFileSize('seo')) : null;
@@ -73,7 +75,7 @@ class SiteController extends Controller {
     public function products() {
         $request = request();
         $pageTitle = "All Items";
-        $query = Product::with(['author', 'activeOptions'])->storefrontVisible();
+        $query = Product::with(['author', 'activeOptions'])->catalogPublished();
         $products = $this->filterPorducts($query);
 
         // Handle AJAX
@@ -84,7 +86,7 @@ class SiteController extends Controller {
         }
 
         $ratings    = Rating::get();
-        $categories = Category::active()->whereHas('products', fn($q) => $q->storefrontVisible())->get();
+        $categories = Category::active()->whereHas('products', fn($q) => $q->catalogPublished())->get();
 
         return view('Template::products', compact(
             'pageTitle',
@@ -109,7 +111,7 @@ class SiteController extends Controller {
             $pageTitle   = $category->name;
         }
 
-        $products = Product::with(['author', 'activeOptions'])->storefrontVisible()
+        $products = Product::with(['author', 'activeOptions'])->catalogPublished()
             ->where('category_id', $category->id)
             ->when($subcategory, function ($query) use ($subcategory) {
                 $query->where('subcategory_id', $subcategory->id);

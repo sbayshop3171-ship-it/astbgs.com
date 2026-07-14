@@ -1,13 +1,13 @@
 @php
     $socialIcons = getContent('social_icon.element', orderById: true);
     $policyPages = getContent('policy_pages.element', orderById: true);
-    $totalProducts = App\Models\Product::count();
+    $totalProducts = App\Models\Product::catalogPublished()->count();
     $totalDownload = App\Models\Earning::sum('download_count');
     $totalMembers = App\Models\User::count();
     $categories = \App\Models\Category::active()
         ->featured()
         ->withCount(['products as total_products' => function($query) {
-            $query->approved();
+            $query->catalogPublished();
         }])
         ->having('total_products', '>', 0)
         ->orderBy('total_products', 'DESC')

@@ -48,7 +48,7 @@
                             </div>
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Type')</label>
-                                <select name="product_type" class="form-control select2 catalog-product-type" data-minimum-results-for-search="-1" required>
+                                <select name="product_type" class="form-control catalog-product-type" required>
                                     <option value="downloadable" @selected(old('product_type', request('product_type', $product->product_type ?: 'downloadable')) === 'downloadable')>@lang('Download Product')</option>
                                     <option value="option_request" @selected(old('product_type', request('product_type', $product->product_type)) === 'option_request')>@lang('Order Product')</option>
                                 </select>
@@ -61,7 +61,7 @@
                             </div>
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Category')</label>
-                                <select name="category_id" class="form-control select2 category-switch" data-minimum-results-for-search="-1" required>
+                                <select name="category_id" class="form-control category-switch" required>
                                     <option value="">@lang('Select One')</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->id }}" @selected((string) old('category_id', $selectedCategory) === (string) $category->id)>{{ __($category->name) }}</option>
@@ -70,7 +70,7 @@
                             </div>
                             <div class="col-lg-3 js-subcategory-wrapper">
                                 <label class="form-label">@lang('Subcategory')</label>
-                                <select name="subcategory_id" class="form-control select2 subcategory-switch" data-minimum-results-for-search="-1" required>
+                                <select name="subcategory_id" class="form-control subcategory-switch" required>
                                     <option value="">@lang('Select One')</option>
                                     @foreach($subcategories as $subcategory)
                                         <option value="{{ $subcategory->id }}" @selected((string) old('subcategory_id', $selectedSubcategory) === (string) $subcategory->id)>{{ __($subcategory->name) }}</option>
@@ -80,7 +80,7 @@
                             </div>
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Availability')</label>
-                                <select name="availability_status" class="form-control select2" data-minimum-results-for-search="-1" required>
+                                <select name="availability_status" class="form-control" required>
                                     @foreach($availabilityOptions as $availabilityOption)
                                         <option value="{{ $availabilityOption }}" @selected(old('availability_status', $product->availability_status ?: 'available') === $availabilityOption)>{{ __(ucfirst($availabilityOption)) }}</option>
                                     @endforeach

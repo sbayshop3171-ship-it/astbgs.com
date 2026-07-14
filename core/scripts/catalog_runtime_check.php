@@ -178,6 +178,7 @@ class CatalogRuntimeCheck
     {
         $this->testUploadRouteAccess();
         $this->testAdminProductsCreated();
+        $this->testAdminCatalogFormRendering();
         $this->testProductRendering();
         $this->testFileReplacement();
         $this->testMixedOrderFlow();
@@ -261,6 +262,30 @@ class CatalogRuntimeCheck
         );
     }
 
+    private function testAdminCatalogFormRendering(): void
+    {
+        $createHtml = $this->renderAdminView(function () {
+            $request = Request::create(route('admin.catalog.products.create', [
+                'product_type' => Status::PRODUCT_TYPE_OPTION_REQUEST,
+            ]), 'GET', [
+                'product_type' => Status::PRODUCT_TYPE_OPTION_REQUEST,
+            ]);
+
+            return app(CatalogProductController::class)->create($request);
+        }, route('admin.catalog.products.create', [
+            'product_type' => Status::PRODUCT_TYPE_OPTION_REQUEST,
+        ]));
+
+        $this->record(
+            'admin.catalog.form.has.core.options',
+            str_contains($createHtml, 'Download Product')
+                && str_contains($createHtml, 'Order Product')
+                && str_contains($createHtml, $this->category->name)
+                && str_contains($createHtml, 'Published'),
+            'Admin catalog create form should render working type and category controls'
+        );
+    }
+
     private function testProductRendering(): void
     {
         Auth::guard('web')->logout();
@@ -270,11 +295,11 @@ class CatalogRuntimeCheck
         }, route('products'));
 
         $this->record(
-            'products.list.renders.managed.items',
+            'products.list.renders.catalog.items',
             str_contains($productsHtml, $this->downloadableProduct->title)
                 && str_contains($productsHtml, $this->optionProduct->title)
-                && str_contains($productsHtml, $this->legacyProduct->title),
-            'Products page should list admin order products and author downloadable items'
+                && !str_contains($productsHtml, $this->legacyProduct->title),
+            'Products page should list published admin catalog products only and hide legacy author items'
         );
 
         $this->record(
@@ -288,11 +313,11 @@ class CatalogRuntimeCheck
         }, route('category.products', [$this->category->slug, $this->subcategory->slug]));
 
         $this->record(
-            'category.page.renders.both.items',
+            'category.page.renders.catalog.items',
             str_contains($categoryHtml, $this->downloadableProduct->title)
                 && str_contains($categoryHtml, $this->optionProduct->title)
-                && str_contains($categoryHtml, $this->legacyProduct->title),
-            'Category/subcategory page should render order products and author downloadable items'
+                && !str_contains($categoryHtml, $this->legacyProduct->title),
+            'Category/subcategory page should render published admin catalog products only and hide legacy author items'
         );
 
         $detailHtml = $this->renderView(function () {
