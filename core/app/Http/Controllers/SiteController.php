@@ -52,7 +52,7 @@ class SiteController extends Controller {
                 'products' => function ($query) {
                     $query->catalogPublished();
                 },
-            ])->having('products_count', '>', 0)
+            ])->orderByDesc('featured')
             ->orderByDesc('products_count')
             ->get();
         $sections    = Page::where('tempname', activeTemplate())->where('slug', 'category')->first();
@@ -86,7 +86,13 @@ class SiteController extends Controller {
         }
 
         $ratings    = Rating::get();
-        $categories = Category::active()->whereHas('products', fn($q) => $q->catalogPublished())->get();
+        $categories = Category::active()
+            ->withCount([
+                'products' => fn($query) => $query->catalogPublished(),
+            ])
+            ->orderByDesc('featured')
+            ->orderBy('name')
+            ->get();
 
         return view('Template::products', compact(
             'pageTitle',

@@ -5,12 +5,12 @@
     $totalDownload = App\Models\Earning::sum('download_count');
     $totalMembers = App\Models\User::count();
     $categories = \App\Models\Category::active()
-        ->featured()
         ->withCount(['products as total_products' => function($query) {
             $query->catalogPublished();
         }])
-        ->having('total_products', '>', 0)
+        ->orderByDesc('featured')
         ->orderBy('total_products', 'DESC')
+        ->orderBy('id')
         ->limit(3)
         ->get();
 @endphp

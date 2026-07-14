@@ -1,14 +1,8 @@
 @php
     $categories = App\Models\Category::active()
-        ->whereHas('products', function ($query) {
-            $query->catalogPublished();
-        })
         ->with([
             'subcategories' => function ($query) {
                 $query->active()
-                    ->whereHas('products', function ($productQuery) {
-                        $productQuery->catalogPublished();
-                    })
                     ->orderBy('id');
             },
         ])

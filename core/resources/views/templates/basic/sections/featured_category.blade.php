@@ -2,14 +2,14 @@
 
 $featureCategory = getContent('featured_category.content', true);
 $categories = App\Models\Category::active()
-->withCount([
-    'products' => function ($query) {
-        $query->catalogPublished();
-    },
+    ->withCount([
+        'products' => function ($query) {
+            $query->catalogPublished();
+        },
     ])
-    ->featured()
-    ->having('products_count', '>', 0)
+    ->orderByDesc('featured')
     ->orderByDesc('products_count')
+    ->orderBy('id')
     ->limit(6)
     ->get();
 @endphp
