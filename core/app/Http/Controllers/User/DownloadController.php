@@ -94,6 +94,7 @@ class DownloadController extends Controller
             $trx->trx = getTrx();
             $trx->remark = "download_commission";
             $trx->details = "Earned " . gs('cur_sym') . $totalCommisison . " from $product->title download";
+            $trx->balance_type = Status::BALANCE_TYPE_EARNING;
             $trx->save();
 
             $product->total_download += 1;

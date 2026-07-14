@@ -37,9 +37,11 @@ class UserController extends Controller
         $downloadCommissionAmount = $author->total_download_amount;
         $downloads                = $author->downloadLog()->with('product')->limit(10)->get();
         $totalWithdrawals         = $author->withdrawals()->success()->sum('amount');
+        $walletTopups             = $author->walletTransactions()->where('trx_type', '+')->limit(5)->get();
+        $walletSpends             = $author->walletTransactions()->where('trx_type', '-')->limit(5)->get();
 
 
-        return view('Template::user.dashboard', compact('pageTitle', 'author', 'unRepliedComments', 'softRejectedProducts', 'unRepliedReviews', 'pendingProducts', 'downProducts', 'downloadCommissionAmount', 'downloads', 'totalWithdrawals'));
+        return view('Template::user.dashboard', compact('pageTitle', 'author', 'unRepliedComments', 'softRejectedProducts', 'unRepliedReviews', 'pendingProducts', 'downProducts', 'downloadCommissionAmount', 'downloads', 'totalWithdrawals', 'walletTopups', 'walletSpends'));
     }
 
     public function show2faForm()
@@ -96,7 +98,11 @@ class UserController extends Controller
         $pageTitle = 'Transactions';
         $remarks = Transaction::distinct('remark')->orderBy('remark')->get('remark');
 
-        $transactions = Transaction::where('user_id', auth()->id())->searchable(['trx'])->filter(['trx_type', 'remark'])->orderBy('id', 'desc')->paginate(getPaginate());
+        $transactions = Transaction::where('user_id', auth()->id())
+            ->searchable(['trx'])
+            ->filter(['trx_type', 'remark', 'balance_type'])
+            ->orderBy('id', 'desc')
+            ->paginate(getPaginate());
 
         return view('Template::user.transactions', compact('pageTitle', 'transactions', 'remarks'));
     }

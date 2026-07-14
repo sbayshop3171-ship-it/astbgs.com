@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model {
     protected $casts = [
-        'subtotal' => 'decimal:2',
-        'total'    => 'decimal:2',
-        'paid_at'  => 'datetime',
+        'subtotal'      => 'decimal:2',
+        'total'         => 'decimal:2',
+        'wallet_amount' => 'decimal:8',
+        'paid_at'       => 'datetime',
     ];
 
     public function user() {
@@ -72,6 +73,25 @@ class Order extends Model {
             }
 
             return '<span class="badge badge--warning">' . trans('Pending') . '</span>';
+        });
+    }
+
+    public function paymentSourceBadge(): Attribute
+    {
+        return new Attribute(function () {
+            if ($this->payment_source === Status::PAYMENT_SOURCE_WALLET) {
+                return '<span class="badge badge--base">' . trans('Wallet') . '</span>';
+            }
+
+            if ($this->payment_source === Status::PAYMENT_SOURCE_GATEWAY) {
+                return '<span class="badge badge--primary">' . trans('Gateway') . '</span>';
+            }
+
+            if ($this->status === Status::CATALOG_ORDER_PENDING_PAYMENT) {
+                return '<span class="badge badge--warning">' . trans('Pending') . '</span>';
+            }
+
+            return '<span class="badge badge--dark">' . trans('Legacy') . '</span>';
         });
     }
 }

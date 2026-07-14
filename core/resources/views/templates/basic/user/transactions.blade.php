@@ -35,6 +35,15 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="flex-grow-1">
+                                <label class="form--label">@lang('Balance Type')</label>
+                                <select class="form-select form--control form--control--sm select2" name="balance_type"
+                                    data-minimum-results-for-search="-1">
+                                    <option value="">@lang('All')</option>
+                                    <option value="{{ \App\Constants\Status::BALANCE_TYPE_WALLET }}" @selected(request()->balance_type === \App\Constants\Status::BALANCE_TYPE_WALLET)>@lang('Wallet')</option>
+                                    <option value="{{ \App\Constants\Status::BALANCE_TYPE_EARNING }}" @selected(request()->balance_type === \App\Constants\Status::BALANCE_TYPE_EARNING)>@lang('Earning')</option>
+                                </select>
+                            </div>
                             <div class="flex-grow-1 align-self-end">
                                 <button class="btn btn--base btn--md w-100"><i
                                         class="las la-filter"></i>@lang('Filter')</button>
@@ -49,6 +58,7 @@
                         <table class="table table--responsive--md">
                             <thead>
                                 <tr>
+                                    <th>@lang('Balance Type')</th>
                                     <th>@lang('Trx')</th>
                                     <th>@lang('Transacted')</th>
                                     <th>@lang('Amount')</th>
@@ -59,6 +69,7 @@
                             <tbody>
                                 @forelse($transactions as $trx)
                                     <tr>
+                                        <td>@php echo $trx->balanceTypeBadge; @endphp</td>
                                         <td><strong>{{ $trx->trx }}</strong></td>
                                         <td>{{ showDateTime($trx->created_at) }}<br>{{ diffForHumans($trx->created_at) }}
                                         </td>

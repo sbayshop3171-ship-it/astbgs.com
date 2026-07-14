@@ -104,4 +104,16 @@ class Deposit extends Model
     {
         return $query->where('status', Status::PAYMENT_INITIATE);
     }
+
+    public function purposeLabel(): Attribute
+    {
+        return new Attribute(function () {
+            return match ($this->purpose) {
+                Status::DEPOSIT_PURPOSE_WALLET_TOPUP => trans('Wallet Top-up'),
+                Status::DEPOSIT_PURPOSE_ORDER_PAYMENT => trans('Order Payment'),
+                Status::DEPOSIT_PURPOSE_MEMBERSHIP_PAYMENT => trans('Membership Payment'),
+                default => trans('Legacy'),
+            };
+        });
+    }
 }

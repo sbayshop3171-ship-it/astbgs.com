@@ -39,6 +39,7 @@ class User extends Authenticatable
         'ver_code_send_at' => 'datetime',
         'email_settings' => 'object',
         'social_media_settings' => 'object',
+        'wallet_balance' => 'decimal:8',
     ];
 
 
@@ -50,6 +51,13 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class)->orderBy('id', 'desc');
+    }
+
+    public function walletTransactions()
+    {
+        return $this->hasMany(Transaction::class)
+            ->where('balance_type', Status::BALANCE_TYPE_WALLET)
+            ->orderBy('id', 'desc');
     }
     public function userPlans()
     {

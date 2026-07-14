@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Gateway;
 use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\FormProcessor;
-use App\Lib\Referral;
 use App\Models\AdminNotification;
 use App\Models\Deposit;
 use App\Models\GatewayCurrency;
 use App\Models\Order;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserPlan;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -24,84 +23,116 @@ class PaymentController extends Controller
         } catch (\Throwable $th) {
             abort(404);
         }
-        $plan = UserPlan::unpaid()->findOrFail($planId);
 
-        $gatewayCurrency = GatewayCurrency::whereHas('method', function ($gate) {
-            $gate->where('status', Status::ENABLE);
-        })->with('method')->orderby('method_code')->get();
+        $plan = UserPlan::query()
+            ->where('user_id', auth()->id())
+            ->unpaid()
+            ->findOrFail($planId);
 
-        $pageTitle = 'Payment Methods';
+        $gatewayCurrency   = $this->gatewayCurrencies();
+        $pageTitle         = 'Payment Methods';
+        $walletTopupAmount = old('wallet_topup_amount');
 
-        return view('Template::user.payment.deposit', compact('gatewayCurrency', 'pageTitle', 'plan'));
+        return view('Template::user.payment.deposit', compact('gatewayCurrency', 'pageTitle', 'plan', 'walletTopupAmount'));
+    }
+
+    public function deposit()
+    {
+        $gatewayCurrency   = $this->gatewayCurrencies();
+        $pageTitle         = 'Add Money';
+        $walletTopupAmount = old('wallet_topup_amount', request()->amount);
+
+        return view('Template::user.payment.deposit', compact('gatewayCurrency', 'pageTitle', 'walletTopupAmount'));
     }
 
     public function depositInsert(Request $request)
     {
         $request->validate([
-            'gateway'  => 'required',
-            'currency' => 'required',
-            'user_plan' => 'nullable|required_without:order_id',
-            'order_id'  => 'nullable|required_without:user_plan',
+            'gateway'            => 'required',
+            'currency'           => 'required',
+            'wallet_topup_amount' => 'nullable|numeric|gt:0',
+            'user_plan'          => 'nullable|integer',
+            'order_id'           => 'nullable|integer',
         ]);
 
+        $targets = collect([
+            'wallet_topup_amount' => filled($request->wallet_topup_amount),
+            'user_plan'           => filled($request->user_plan),
+            'order_id'            => filled($request->order_id),
+        ])->filter();
+
+        if ($targets->count() !== 1) {
+            $notify[] = ['error', 'Please choose exactly one payment target'];
+            return back()->withNotify($notify)->withInput();
+        }
+
         $user    = auth()->user();
-        $plan = null;
-        $order = null;
+        $plan    = null;
+        $order   = null;
+        $purpose = Status::DEPOSIT_PURPOSE_WALLET_TOPUP;
+        $amount  = (float) $request->wallet_topup_amount;
 
         if ($request->filled('user_plan')) {
-            $plan = UserPlan::where('id', $request->user_plan)->where('user_id', auth()->id())->unpaid()->firstOrFail();
+            $plan = UserPlan::query()
+                ->where('id', $request->user_plan)
+                ->where('user_id', auth()->id())
+                ->unpaid()
+                ->firstOrFail();
 
-            if (!$plan) {
-                $notify[] = ['error', 'Desire plan not found!'];
-                return back()->withNotify($notify);
-            }
-
-            $amount = $plan->price;
-        } else {
-            $order = Order::where('id', $request->order_id)
+            $amount  = (float) $plan->price;
+            $purpose = Status::DEPOSIT_PURPOSE_MEMBERSHIP_PAYMENT;
+        } elseif ($request->filled('order_id')) {
+            $order = Order::query()
+                ->where('id', $request->order_id)
                 ->where('user_id', auth()->id())
                 ->pendingPayment()
                 ->firstOrFail();
 
-            $amount = $order->total;
+            $amount  = (float) $order->total;
+            $purpose = Status::DEPOSIT_PURPOSE_ORDER_PAYMENT;
         }
 
         $gate = GatewayCurrency::whereHas('method', function ($gate) {
             $gate->where('status', Status::ENABLE);
-        })->where('method_code', $request->gateway)->where('currency', $request->currency)->first();
-
+        })->with('method')
+            ->where('method_code', $request->gateway)
+            ->where('currency', $request->currency)
+            ->first();
 
         if (!$gate) {
             $notify[] = ['error', 'Invalid gateway'];
-            return back()->withNotify($notify);
+            return back()->withNotify($notify)->withInput();
         }
 
         if ($gate->min_amount > $amount || $gate->max_amount < $amount) {
             $notify[] = ['error', 'Please follow payment limit'];
-            return back()->withNotify($notify);
+            return back()->withNotify($notify)->withInput();
         }
 
         $charge      = $gate->fixed_charge + ($amount * $gate->percent_charge / 100);
         $payable     = $amount + $charge;
         $finalAmount = $payable * $gate->rate;
 
-        $data                  = new Deposit();
-        $data->user_id         = $user->id;
-        $data->user_plan_id    = $plan?->id;
-        $data->order_id        = $order?->id;
-        $data->method_code     = $gate->method_code;
-        $data->method_currency = strtoupper($gate->currency);
-        $data->amount          = $amount;
-        $data->charge          = $charge;
-        $data->rate            = $gate->rate;
-        $data->final_amount    = $finalAmount;
-        $data->btc_amount      = 0;
-        $data->btc_wallet      = "";
-        $data->trx             = getTrx();
-        $data->success_url     = $order ? route('user.orders.show', $order->id) : route('user.subscription.history');
-        $data->failed_url      = $order ? route('user.orders.show', $order->id) : route('plans');
-        $data->save();
-        session()->put('Track', $data->trx);
+        $deposit                  = new Deposit();
+        $deposit->user_id         = $user->id;
+        $deposit->user_plan_id    = $plan?->id;
+        $deposit->order_id        = $order?->id;
+        $deposit->purpose         = $purpose;
+        $deposit->method_code     = $gate->method_code;
+        $deposit->method_currency = strtoupper($gate->currency);
+        $deposit->amount          = $amount;
+        $deposit->charge          = $charge;
+        $deposit->rate            = $gate->rate;
+        $deposit->final_amount    = $finalAmount;
+        $deposit->btc_amount      = 0;
+        $deposit->btc_wallet      = '';
+        $deposit->trx             = getTrx();
+        $deposit->success_url     = $this->getSuccessUrl($purpose, $plan, $order);
+        $deposit->failed_url      = $this->getFailedUrl($purpose, $plan, $order, $amount);
+        $deposit->save();
+
+        session()->put('Track', $deposit->trx);
+
         return to_route('user.deposit.confirm');
     }
 
@@ -112,18 +143,27 @@ class PaymentController extends Controller
         } catch (\Exception $ex) {
             abort(404);
         }
-        $data = Deposit::where('id', $id)->where('status', Status::PAYMENT_INITIATE)->orderBy('id', 'DESC')->firstOrFail();
+
+        $data = Deposit::where('id', $id)
+            ->where('status', Status::PAYMENT_INITIATE)
+            ->orderBy('id', 'DESC')
+            ->firstOrFail();
+
         $user = User::findOrFail($data->user_id);
         auth()->login($user);
         session()->put('Track', $data->trx);
+
         return to_route('user.deposit.confirm');
     }
 
     public function depositConfirm()
     {
-
         $track   = session()->get('Track');
-        $deposit = Deposit::where('trx', $track)->where('status', Status::PAYMENT_INITIATE)->orderBy('id', 'DESC')->with('gateway')->firstOrFail();
+        $deposit = Deposit::where('trx', $track)
+            ->where('status', Status::PAYMENT_INITIATE)
+            ->orderBy('id', 'DESC')
+            ->with('gateway')
+            ->firstOrFail();
 
         if ($deposit->method_code >= 1000) {
             return to_route('user.deposit.manual.confirm');
@@ -139,122 +179,58 @@ class PaymentController extends Controller
             $notify[] = ['error', $data->message];
             return back()->withNotify($notify);
         }
+
         if (isset($data->redirect)) {
             return redirect($data->redirect_url);
         }
 
-        // for Stripe V3
         if (isset($data->session)) {
             $deposit->btc_wallet = $data->session->id;
             $deposit->save();
         }
 
         $pageTitle = 'Payment Confirm';
+
         return view("Template::$data->view", compact('data', 'pageTitle', 'deposit'));
     }
 
     public static function userDataUpdate($deposit, $isManual = null)
     {
-        if ($deposit->status == Status::PAYMENT_INITIATE || $deposit->status == Status::PAYMENT_PENDING) {
-            $deposit->status = Status::PAYMENT_SUCCESS;
-            $deposit->save();
-
-            $user = User::find($deposit->user_id);
-            $methodName = $deposit->methodName();
-
-            if ($deposit->user_plan_id) {
-                $user->balance += $deposit->amount;
-                $user->save();
-
-                $transaction               = new Transaction();
-                $transaction->user_id      = $deposit->user_id;
-                $transaction->amount       = $deposit->amount;
-                $transaction->post_balance = $user->balance;
-                $transaction->charge       = $deposit->charge;
-                $transaction->trx_type     = '+';
-                $transaction->details      = 'Payment by ' . $methodName;
-                $transaction->trx          = $deposit->trx;
-                $transaction->remark       = 'payment';
-                $transaction->save();
-
-                $activePlan = UserPlan::where('user_id', $deposit->user_id)->active()->paid()->first();
-                if ($activePlan) {
-                    $activePlan->status = Status::PLAN_EXPIRED;
-                    $activePlan->save();
-                }
-
-                $userPlan                 = $deposit->userPlan;
-                $userPlan->is_payment     = Status::PAID_SUBSCRIPTION;
-                $userPlan->status         = Status::PLAN_ACTIVE;
-                $userPlan->save();
-
-                $user->balance -= $deposit->amount;
-                $user->save();
-
-                $transaction               = new Transaction();
-                $transaction->user_id      = $deposit->user_id;
-                $transaction->amount       = $userPlan->price;
-                $transaction->post_balance = $user->balance;
-                $transaction->charge       = 0;
-                $transaction->trx_type     = '-';
-                $transaction->details      = 'Subscribed plan - ' . $userPlan->plan->name;
-                $transaction->trx          = $deposit->trx;
-                $transaction->remark       = 'purchase';
-                $transaction->save();
-
-                session()->forget('Track');
-
-                createPlanHistory($userPlan->plan_id, $userPlan->price, '+', 'purchase');
-
-                // Referral Commission
-                if (gs('referral') && $user->ref_by) {
-                    Referral::processReferralCommission($user, $userPlan->price, $deposit->trx, $userPlan->plan_id);
-                }
-            }
-
-            if ($deposit->order_id) {
-                $order = $deposit->order()->with('items')->first();
-                if ($order) {
-                    $order->payment_trx = $deposit->trx;
-                    $order->gateway_name = $methodName;
-                    $order->paid_at = now();
-                    $order->status = $order->items->every(fn($item) => $item->delivery_type === Status::PRODUCT_TYPE_DOWNLOADABLE)
-                        ? Status::CATALOG_ORDER_COMPLETED
-                        : Status::CATALOG_ORDER_PROCESSING;
-                    $order->save();
-
-                    $transaction               = new Transaction();
-                    $transaction->user_id      = $deposit->user_id;
-                    $transaction->amount       = $order->total;
-                    $transaction->post_balance = $user->balance;
-                    $transaction->charge       = $deposit->charge;
-                    $transaction->trx_type     = '-';
-                    $transaction->details      = 'Catalog order payment - ' . $order->order_number;
-                    $transaction->trx          = $deposit->trx;
-                    $transaction->remark       = 'catalog_purchase';
-                    $transaction->save();
-                }
-            }
-
-            if (!$isManual) {
-                $adminNotification            = new AdminNotification();
-                $adminNotification->user_id   = $user->id;
-                $adminNotification->title     = 'Payment successful via ' . $methodName;
-                $adminNotification->click_url = $deposit->order_id ? urlPath('admin.orders.show', $deposit->order_id) : urlPath('admin.deposit.successful');
-                $adminNotification->save();
-            }
-
-            notify($user, $isManual ? 'DEPOSIT_APPROVE' : 'DEPOSIT_COMPLETE', [
-                'method_name'     => $methodName,
-                'method_currency' => $deposit->method_currency,
-                'method_amount'   => showAmount($deposit->final_amount, currencyFormat: false),
-                'amount'          => showAmount($deposit->amount, currencyFormat: false),
-                'charge'          => showAmount($deposit->charge, currencyFormat: false),
-                'rate'            => showAmount($deposit->rate, currencyFormat: false),
-                'trx'             => $deposit->trx,
-                'post_balance'    => showAmount($user->balance),
-            ]);
+        if (!in_array($deposit->status, [Status::PAYMENT_INITIATE, Status::PAYMENT_PENDING])) {
+            return;
         }
+
+        $result     = app(WalletService::class)->finalizeDeposit($deposit);
+        $deposit    = $result['deposit'];
+        $user       = $result['user'];
+        $purpose    = $result['purpose'];
+        $methodName = $result['method_name'];
+
+        session()->forget('Track');
+
+        if (!$isManual) {
+            $adminNotification            = new AdminNotification();
+            $adminNotification->user_id   = $user->id;
+            $adminNotification->title     = 'Payment successful via ' . $methodName;
+            $adminNotification->click_url = $purpose === Status::DEPOSIT_PURPOSE_ORDER_PAYMENT
+                ? urlPath('admin.orders.show', $deposit->order_id)
+                : urlPath('admin.deposit.successful');
+            $adminNotification->save();
+        }
+
+        notify($user, $isManual ? 'DEPOSIT_APPROVE' : 'DEPOSIT_COMPLETE', [
+            'method_name'     => $methodName,
+            'method_currency' => $deposit->method_currency,
+            'method_amount'   => showAmount($deposit->final_amount, currencyFormat: false),
+            'amount'          => showAmount($deposit->amount, currencyFormat: false),
+            'charge'          => showAmount($deposit->charge, currencyFormat: false),
+            'rate'            => showAmount($deposit->rate, currencyFormat: false),
+            'trx'             => $deposit->trx,
+            'post_balance'    => showAmount(
+                $purpose === Status::DEPOSIT_PURPOSE_WALLET_TOPUP ? $user->wallet_balance : $user->balance,
+                currencyFormat: false
+            ),
+        ]);
     }
 
     public function manualDepositConfirm()
@@ -262,12 +238,14 @@ class PaymentController extends Controller
         $track = session()->get('Track');
         $data  = Deposit::with('gateway')->where('status', Status::PAYMENT_INITIATE)->where('trx', $track)->first();
         abort_if(!$data, 404);
+
         if ($data->method_code > 999) {
             $pageTitle = 'Confirm Payment';
             $method    = $data->gatewayCurrency();
             $gateway   = $method->method;
             return view('Template::user.payment.manual', compact('data', 'pageTitle', 'method', 'gateway'));
         }
+
         abort(404);
     }
 
@@ -276,6 +254,7 @@ class PaymentController extends Controller
         $track = session()->get('Track');
         $data  = Deposit::with('gateway')->where('status', Status::PAYMENT_INITIATE)->where('trx', $track)->first();
         abort_if(!$data, 404);
+
         $gatewayCurrency = $data->gatewayCurrency();
         $gateway         = $gatewayCurrency->method;
         $formData        = $gateway->form?->form_data ?? [];
@@ -285,6 +264,7 @@ class PaymentController extends Controller
         if ($validationRule) {
             $request->validate($validationRule);
         }
+
         $userData = $formProcessor->processFormData($request, $formData);
 
         $data->detail = $userData;
@@ -308,10 +288,40 @@ class PaymentController extends Controller
         ]);
 
         $notify[] = ['success', 'Your payment request has been taken'];
-        if ($data->order_id) {
+
+        if ($data->purpose === Status::DEPOSIT_PURPOSE_ORDER_PAYMENT && $data->order_id) {
             return to_route('user.orders.show', $data->order_id)->withNotify($notify);
         }
 
+        if ($data->purpose === Status::DEPOSIT_PURPOSE_WALLET_TOPUP) {
+            return to_route('user.deposit.index')->withNotify($notify);
+        }
+
         return to_route('user.subscription.history')->withNotify($notify);
+    }
+
+    protected function gatewayCurrencies()
+    {
+        return GatewayCurrency::whereHas('method', function ($gate) {
+            $gate->where('status', Status::ENABLE);
+        })->with('method')->orderBy('method_code')->get();
+    }
+
+    protected function getSuccessUrl(string $purpose, ?UserPlan $plan, ?Order $order): string
+    {
+        return match ($purpose) {
+            Status::DEPOSIT_PURPOSE_ORDER_PAYMENT => route('user.orders.show', $order->id),
+            Status::DEPOSIT_PURPOSE_MEMBERSHIP_PAYMENT => route('user.subscription.history'),
+            default => route('user.deposit.index'),
+        };
+    }
+
+    protected function getFailedUrl(string $purpose, ?UserPlan $plan, ?Order $order, float $amount): string
+    {
+        return match ($purpose) {
+            Status::DEPOSIT_PURPOSE_ORDER_PAYMENT => route('user.orders.pay', $order->id),
+            Status::DEPOSIT_PURPOSE_MEMBERSHIP_PAYMENT => route('user.payment', encrypt($plan->id)),
+            default => route('user.deposit.index', ['amount' => getAmount($amount)]),
+        };
     }
 }

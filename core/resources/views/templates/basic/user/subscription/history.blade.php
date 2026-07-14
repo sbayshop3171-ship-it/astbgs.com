@@ -22,7 +22,10 @@
                                         <th class="text-center">@lang('Price')</th>
                                         <th class="text-center">@lang('Daily | Weekly | Monthly')</th>
                                         <th class="text-center">@lang('Payment')</th>
+                                        <th class="text-center">@lang('Source')</th>
+                                        <th class="text-center">@lang('TRX')</th>
                                         <th>@lang('Status')</th>
+                                        <th>@lang('Action')</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -49,8 +52,21 @@
                                             <td class="text-center">
                                                 @php echo $item->paymentBadge @endphp
                                             </td>
+                                            <td class="text-center">
+                                                @php echo $item->paymentSourceBadge @endphp
+                                            </td>
+                                            <td class="text-end text-md-center">
+                                                {{ $item->payment_trx ?? '—' }}
+                                            </td>
                                             <td>
                                                 @php echo $item->statusBadge @endphp
+                                            </td>
+                                            <td>
+                                                @if ($item->is_payment == Status::UNPAID_SUBSCRIPTION)
+                                                    <a href="{{ route('user.payment', encrypt($item->id)) }}" class="btn btn--base btn--sm">@lang('Pay')</a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
                                             </td>
 
                                         </tr>

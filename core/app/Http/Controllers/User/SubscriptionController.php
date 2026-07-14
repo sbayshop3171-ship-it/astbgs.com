@@ -6,8 +6,10 @@ use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\UserPlan;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use RuntimeException;
 
 class SubscriptionController extends Controller
 {
@@ -44,6 +46,25 @@ class SubscriptionController extends Controller
         $pageTitle = 'Subscription History';
         $subscriptions = auth()->user()->userPlans()->searchable(['plan:name'])->with('plan')->orderBy('id', 'desc')->paginate(getPaginate());
         return view('Template::user.subscription.history', compact('pageTitle', 'subscriptions'));
+    }
+
+    public function walletPay($id)
+    {
+        $userPlan = UserPlan::query()
+            ->where('user_id', auth()->id())
+            ->unpaid()
+            ->with('plan')
+            ->findOrFail($id);
+
+        try {
+            app(WalletService::class)->payMembership(auth()->user(), $userPlan);
+        } catch (RuntimeException $exception) {
+            $notify[] = ['error', $exception->getMessage()];
+            return back()->withNotify($notify);
+        }
+
+        $notify[] = ['success', 'Membership activated successfully from wallet'];
+        return to_route('user.subscription.history')->withNotify($notify);
     }
     public function mySubscription(Request $request)
     {

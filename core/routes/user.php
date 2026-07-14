@@ -77,6 +77,7 @@ Route::middleware('auth')->name('user.')->group(function () {
             //plan-subscribe
             Route::controller('SubscriptionController')->group(function () {
                 Route::post('plan-subscribe', 'subscribe')->name('plan.subscribe');
+                Route::post('subscription/{id}/wallet-pay', 'walletPay')->name('subscription.wallet.pay');
                 Route::get('subscription/history', 'history')->name('subscription.history');
                 Route::get('my/subscription', 'mySubscription')->name('my.subscription');
             });
@@ -85,6 +86,7 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('{id}', 'show')->name('show');
                 Route::get('{id}/pay', 'pay')->name('pay');
+                Route::post('{id}/wallet-pay', 'walletPay')->name('wallet.pay');
             });
 
             //Profile setting

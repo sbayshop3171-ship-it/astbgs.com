@@ -93,6 +93,9 @@
             </div>
         @endif
 
+        <div class="col-12">
+            @include('Template::user.dashboard.widgets')
+        </div>
 
         @if (!$author->is_author)
             <div class="col-12">
@@ -106,6 +109,7 @@
                                     <div class="d-flex justify-content-center flex-wrap gap-2">
                                         <a href="{{ route('products') }}" class="btn btn--base">@lang('Browse Catalog')</a>
                                         <a href="{{ route('user.orders.index') }}" class="btn btn-outline--base">@lang('My Orders')</a>
+                                        <a href="{{ route('user.deposit.index') }}" class="btn btn-outline--light">@lang('Add Money')</a>
                                     </div>
                                 </div>
                             </div>
@@ -113,10 +117,8 @@
                     </div>
                 </div>
             </div>
-        @else
-            <div class="col-12">
-                @include('Template::user.dashboard.widgets')
-            </div>
+
+            @include('Template::user.dashboard.recent_wallet_activity')
         @endif
 
         @include('Template::user.dashboard.recent_downloads')

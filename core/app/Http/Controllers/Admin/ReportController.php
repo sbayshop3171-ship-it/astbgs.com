@@ -19,7 +19,7 @@ class ReportController extends Controller {
 
         $remarks = Transaction::distinct('remark')->orderBy('remark')->get('remark');
 
-        $transactions = Transaction::searchable(['trx', 'user:username'])->filter(['trx_type', 'remark'])->dateFilter()->orderBy('id', 'desc')->with('user');
+        $transactions = Transaction::searchable(['trx', 'user:username'])->filter(['trx_type', 'remark', 'balance_type'])->dateFilter()->orderBy('id', 'desc')->with('user');
         if ($userId) {
             $transactions = $transactions->where('user_id', $userId);
         }

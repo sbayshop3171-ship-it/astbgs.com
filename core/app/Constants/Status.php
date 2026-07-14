@@ -78,6 +78,16 @@ class Status
     const ACCOUNT_BALANCE = 1;
     const GATEWAY         = 2;
 
+    const BALANCE_TYPE_EARNING = 'earning';
+    const BALANCE_TYPE_WALLET  = 'wallet';
+
+    const PAYMENT_SOURCE_GATEWAY = 'gateway';
+    const PAYMENT_SOURCE_WALLET  = 'wallet';
+
+    const DEPOSIT_PURPOSE_WALLET_TOPUP       = 'wallet_topup';
+    const DEPOSIT_PURPOSE_ORDER_PAYMENT      = 'order_payment';
+    const DEPOSIT_PURPOSE_MEMBERSHIP_PAYMENT = 'membership_payment';
+
     const APPROVED_REFUND = 1;
     const REJECTED_REFUND = 2;
 

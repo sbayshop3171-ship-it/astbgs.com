@@ -58,7 +58,22 @@
                         </li>
                     @endforeach
                 </ul>
-                <a href="{{ route('plans') }}" class="btn btn--sm btn--base px-2"> <i class="las la-plus-circle"></i> @lang('Membership Plan')</a>
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    @auth
+                        <a href="{{ route('user.transactions', ['balance_type' => \App\Constants\Status::BALANCE_TYPE_WALLET]) }}"
+                            class="btn btn--sm btn-outline--base px-3">
+                            <i class="las la-wallet"></i>
+                            @lang('Wallet')
+                            <span class="ms-1">{{ showAmount(auth()->user()->wallet_balance ?? 0) }}</span>
+                        </a>
+                        <a href="{{ route('user.deposit.index') }}" class="btn btn--sm btn-outline--light px-3">
+                            <i class="las la-plus-circle"></i> @lang('Add Money')
+                        </a>
+                    @endauth
+                    <a href="{{ route('plans') }}" class="btn btn--sm btn--base px-2">
+                        <i class="las la-plus-circle"></i> @lang('Membership Plan')
+                    </a>
+                </div>
             </div>
         </nav>
     </div>

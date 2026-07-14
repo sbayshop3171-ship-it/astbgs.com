@@ -33,6 +33,14 @@
                             </select>
                         </div>
                         <div class="flex-grow-1">
+                            <label>@lang('Balance Type')</label>
+                            <select class="form-control select2" data-minimum-results-for-search="-1" name="balance_type">
+                                <option value="">@lang('All')</option>
+                                <option value="{{ \App\Constants\Status::BALANCE_TYPE_WALLET }}" @selected(request()->balance_type === \App\Constants\Status::BALANCE_TYPE_WALLET)>@lang('Wallet')</option>
+                                <option value="{{ \App\Constants\Status::BALANCE_TYPE_EARNING }}" @selected(request()->balance_type === \App\Constants\Status::BALANCE_TYPE_EARNING)>@lang('Earning')</option>
+                            </select>
+                        </div>
+                        <div class="flex-grow-1">
                             <label>@lang('Date')</label>
                             <input name="date" type="search" class="datepicker-here form-control bg--white pe-2 date-range" placeholder="@lang('Start Date - End Date')" autocomplete="off" value="{{ request()->date }}">
                         </div>
@@ -50,6 +58,7 @@
                         <thead>
                             <tr>
                                 <th>@lang('User')</th>
+                                <th>@lang('Balance Type')</th>
                                 <th>@lang('TRX')</th>
                                 <th>@lang('Transacted')</th>
                                 <th>@lang('Amount')</th>
@@ -65,6 +74,7 @@
                                         <br>
                                         <span class="small"> <a href="{{ appendQuery('search',$trx->user->username) }}"><span>@</span>{{ $trx->user->username }}</a> </span>
                                     </td>
+                                    <td>@php echo $trx->balanceTypeBadge; @endphp</td>
 
                                     <td>
                                         <strong>{{ $trx->trx }}</strong>

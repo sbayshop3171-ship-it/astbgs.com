@@ -8,10 +8,12 @@ use App\Models\NotificationLog;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Services\WalletService;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
 use App\Lib\UserNotificationSender;
 use Illuminate\Support\Facades\Auth;
+use RuntimeException;
 
 class ManageUsersController extends Controller
 {
@@ -209,57 +211,40 @@ class ManageUsersController extends Controller
     public function addSubBalance(Request $request, $id)
     {
         $request->validate([
-            'amount' => 'required|numeric|gt:0',
-            'act'    => 'required|in:add,sub',
-            'remark' => 'required|string|max:255',
+            'amount'       => 'required|numeric|gt:0',
+            'act'          => 'required|in:add,sub',
+            'balance_type' => 'required|in:' . Status::BALANCE_TYPE_EARNING . ',' . Status::BALANCE_TYPE_WALLET,
+            'remark'       => 'required|string|max:255',
         ]);
 
-        $user   = User::findOrFail($id);
-        $amount = $request->amount;
-        $trx    = getTrx();
+        $user = User::findOrFail($id);
 
-        $transaction = new Transaction();
-
-        if ($request->act == 'add') {
-            $user->balance += $amount;
-
-            $transaction->trx_type = '+';
-            $transaction->remark   = 'balance_add';
-
-            $notifyTemplate = 'BAL_ADD';
-
-            $notify[] = ['success', 'Balance added successfully'];
-
-        } else {
-            if ($amount > $user->balance) {
-                $notify[] = ['error', $user->username . ' doesn\'t have sufficient balance.'];
-                return back()->withNotify($notify);
-            }
-
-            $user->balance -= $amount;
-
-            $transaction->trx_type = '-';
-            $transaction->remark   = 'balance_subtract';
-
-            $notifyTemplate = 'BAL_SUB';
-            $notify[]       = ['success', 'Balance subtracted successfully'];
+        try {
+            $result = app(WalletService::class)->adjustBalance(
+                $user,
+                (float) $request->amount,
+                $request->act,
+                $request->remark,
+                $request->balance_type
+            );
+        } catch (RuntimeException $exception) {
+            $notify[] = ['error', $exception->getMessage()];
+            return back()->withNotify($notify);
         }
 
-        $user->save();
+        $user        = $result['user'];
+        $transaction = $result['transaction'];
 
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = 0;
-        $transaction->trx          = $trx;
-        $transaction->details      = $request->remark;
-        $transaction->save();
+        $notifyTemplate = $request->act === 'add' ? 'BAL_ADD' : 'BAL_SUB';
+        $balanceLabel   = $request->balance_type === Status::BALANCE_TYPE_WALLET ? 'Wallet balance' : 'Earning balance';
+
+        $notify[] = ['success', $request->act === 'add' ? $balanceLabel . ' added successfully' : $balanceLabel . ' subtracted successfully'];
 
         notify($user, $notifyTemplate, [
-            'trx'          => $trx,
-            'amount'       => showAmount($amount, currencyFormat: false),
-            'remark'       => $request->remark,
-            'post_balance' => showAmount($user->balance, currencyFormat: false),
+            'trx'          => $transaction->trx,
+            'amount'       => showAmount($request->amount, currencyFormat: false),
+            'remark'       => $balanceLabel . ' - ' . $request->remark,
+            'post_balance' => showAmount($transaction->post_balance, currencyFormat: false),
         ]);
 
         return back()->withNotify($notify);

@@ -70,6 +70,7 @@
                                         <span class="profile-info__content">
                                             <span class="profile-info__name">{{ $user->fullname ?? '' }} </span>
                                             <span class="profile-info__text">{{ $user->email }}</span>
+                                            <span class="profile-info__text">@lang('Wallet'): {{ showAmount($user->wallet_balance ?? 0) }}</span>
                                         </span>
                                     </div>
 
@@ -101,6 +102,18 @@
                                             </a>
                                         </li>
                                         <li class="profile-dropdown-list__item">
+                                            <a href="{{ route('user.transactions', ['balance_type' => \App\Constants\Status::BALANCE_TYPE_WALLET]) }}" class="profile-dropdown-list__link">
+                                                <span class="icon"><i class="la la-wallet"></i></span>
+                                                @lang('Wallet')
+                                            </a>
+                                        </li>
+                                        <li class="profile-dropdown-list__item">
+                                            <a href="{{ route('user.deposit.index') }}" class="profile-dropdown-list__link {{ menuActive('user.deposit.*') }}">
+                                                <span class="icon"><i class="la la-plus-circle"></i></span>
+                                                @lang('Add Money')
+                                            </a>
+                                        </li>
+                                        <li class="profile-dropdown-list__item">
                                             <a href="{{ route('user.subscription.history') }}" class="profile-dropdown-list__link {{ menuActive('user.subscription.history') }} ">
                                                 <span class="icon"> <i class="la la-bell"></i></span>@lang('Subscription History')</a>
                                         </li>
@@ -119,13 +132,13 @@
                                                     @lang('Withdraw History')
                                                 </a>
                                             </li>
-                                            <li class="profile-dropdown-list__item">
-                                                <a href="{{ route('user.transactions') }}" class="profile-dropdown-list__link {{ menuActive('user.transactions') }}">
-                                                    <span class="icon"><i class="la la-exchange-alt"></i></span>
-                                                    @lang('Transactions')
-                                                </a>
-                                            </li>
                                         @endif
+                                        <li class="profile-dropdown-list__item">
+                                            <a href="{{ route('user.transactions') }}" class="profile-dropdown-list__link {{ menuActive('user.transactions') }}">
+                                                <span class="icon"><i class="la la-exchange-alt"></i></span>
+                                                @lang('Transactions')
+                                            </a>
+                                        </li>
                                         <li class="profile-dropdown-list__item">
                                             <a href="{{ route('ticket.index') }}" class="profile-dropdown-list__link {{ menuActive('ticket.*') }}">
                                                 <span class="icon"><i class="la la-ticket"></i></span>

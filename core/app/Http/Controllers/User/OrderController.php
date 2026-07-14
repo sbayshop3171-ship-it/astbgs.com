@@ -9,6 +9,8 @@ use App\Models\GatewayCurrency;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductFile;
+use App\Services\WalletService;
+use RuntimeException;
 
 class OrderController extends Controller
 {
@@ -39,6 +41,21 @@ class OrderController extends Controller
         $pageTitle = 'Payment Methods';
 
         return view('Template::user.payment.deposit', compact('gatewayCurrency', 'pageTitle', 'order'));
+    }
+
+    public function walletPay($id)
+    {
+        $order = auth()->user()->orders()->pendingPayment()->findOrFail($id);
+
+        try {
+            app(WalletService::class)->payOrder(auth()->user(), $order);
+        } catch (RuntimeException $exception) {
+            $notify[] = ['error', $exception->getMessage()];
+            return back()->withNotify($notify);
+        }
+
+        $notify[] = ['success', 'Order paid successfully from wallet'];
+        return to_route('user.orders.show', $order->id)->withNotify($notify);
     }
 
     public function downloadFile($orderItemId, $fileId)

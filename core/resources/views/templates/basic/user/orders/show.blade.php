@@ -59,6 +59,16 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-2"><strong>@lang('Total:')</strong> {{ showAmount($order->total) }}</p>
+                    <p class="mb-2"><strong>@lang('Payment Source:')</strong> @php echo $order->paymentSourceBadge; @endphp</p>
+                    @if($order->payment_trx)
+                        <p class="mb-2"><strong>@lang('Payment TRX:')</strong> {{ $order->payment_trx }}</p>
+                    @endif
+                    @if($order->gateway_name)
+                        <p class="mb-2"><strong>@lang('Gateway/Method:')</strong> {{ $order->gateway_name }}</p>
+                    @endif
+                    @if((float) $order->wallet_amount > 0)
+                        <p class="mb-2"><strong>@lang('Wallet Debited:')</strong> {{ showAmount($order->wallet_amount) }}</p>
+                    @endif
                     <p class="mb-2"><strong>@lang('Created:')</strong> {{ showDateTime($order->created_at) }}</p>
                     @if($order->paid_at)
                         <p class="mb-2"><strong>@lang('Paid At:')</strong> {{ showDateTime($order->paid_at) }}</p>

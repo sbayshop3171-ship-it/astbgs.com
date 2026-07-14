@@ -121,6 +121,9 @@ class WithdrawController extends Controller
         $transaction->details = 'Withdraw request via ' . $withdraw->method->name;
         $transaction->trx = $withdraw->trx;
         $transaction->remark = 'withdraw';
+        $transaction->balance_type = Status::BALANCE_TYPE_EARNING;
+        $transaction->reference_type = 'withdrawal';
+        $transaction->reference_id = $withdraw->id;
         $transaction->save();
 
         $adminNotification = new AdminNotification();

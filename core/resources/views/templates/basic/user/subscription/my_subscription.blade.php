@@ -27,6 +27,14 @@
                     {{ showAmount($userPlan->price) }}/{{ $userPlan->plan_duration == 1 ? __('month') : __('year') }}
                 </div>
             </div>
+            <div class="detail-item">
+                <div class="detail-label">@lang('Payment Source')</div>
+                <div class="detail-value">@php echo $userPlan->paymentSourceBadge; @endphp</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">@lang('Payment TRX')</div>
+                <div class="detail-value">{{ $userPlan->payment_trx ?? '—' }}</div>
+            </div>
         </div>
         <div class="row gy-4">
             <div class="col-md-4">

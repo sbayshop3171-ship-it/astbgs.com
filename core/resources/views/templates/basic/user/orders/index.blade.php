@@ -12,6 +12,7 @@
                                         <th>@lang('Order')</th>
                                         <th>@lang('Items')</th>
                                         <th>@lang('Total')</th>
+                                        <th>@lang('Payment')</th>
                                         <th>@lang('Status')</th>
                                         <th>@lang('Action')</th>
                                     </tr>
@@ -25,6 +26,7 @@
                                             </td>
                                             <td>{{ $order->items->count() }}</td>
                                             <td>{{ showAmount($order->total) }}</td>
+                                            <td>@php echo $order->paymentSourceBadge; @endphp</td>
                                             <td>@php echo $order->statusBadge; @endphp</td>
                                             <td>
                                                 <a href="{{ route('user.orders.show', $order->id) }}" class="btn btn-outline--base btn--sm">@lang('Details')</a>

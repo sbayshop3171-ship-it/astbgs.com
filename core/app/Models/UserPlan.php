@@ -71,4 +71,23 @@ class UserPlan extends Model
             return $html;
         });
     }
+
+    public function paymentSourceBadge(): Attribute
+    {
+        return new Attribute(function () {
+            if ($this->payment_source === Status::PAYMENT_SOURCE_WALLET) {
+                return '<span class="badge badge--base">' . trans('Wallet') . '</span>';
+            }
+
+            if ($this->payment_source === Status::PAYMENT_SOURCE_GATEWAY) {
+                return '<span class="badge badge--primary">' . trans('Gateway') . '</span>';
+            }
+
+            if ($this->is_payment == Status::UNPAID_SUBSCRIPTION) {
+                return '<span class="badge badge--warning">' . trans('Pending') . '</span>';
+            }
+
+            return '<span class="badge badge--dark">' . trans('Legacy') . '</span>';
+        });
+    }
 }

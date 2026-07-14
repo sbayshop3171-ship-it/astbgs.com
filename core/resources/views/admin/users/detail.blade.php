@@ -27,9 +27,14 @@
                 </div>
 
                 <div class="col-xxl-3 col-sm-6">
-                    <x-widget style="7" link="{{ route('admin.report.transaction', $user->id) }}" title="Balance"
+                    <x-widget style="7" link="{{ route('admin.report.transaction', [$user->id, 'balance_type' => \App\Constants\Status::BALANCE_TYPE_EARNING]) }}" title="Earning Balance"
                         icon="las la-money-bill-wave-alt" value="{{ showAmount($user->balance) }}" bg="indigo"
                         type="2" />
+                </div>
+
+                <div class="col-xxl-3 col-sm-6">
+                    <x-widget style="7" link="{{ route('admin.report.transaction', [$user->id, 'balance_type' => \App\Constants\Status::BALANCE_TYPE_WALLET]) }}" title="Wallet Balance"
+                        icon="las la-wallet" value="{{ showAmount($user->wallet_balance ?? 0) }}" bg="base" type="2" />
                 </div>
 
                 <div class="col-xxl-3 col-sm-6">
@@ -51,15 +56,33 @@
             <div class="d-flex flex-wrap gap-3 mt-4">
                 <div class="flex-fill">
                     <button data-bs-toggle="modal" data-bs-target="#addSubModal"
-                        class="btn btn--success btn--shadow w-100 btn-lg bal-btn" data-act="add">
-                        <i class="las la-plus-circle"></i> @lang('Balance')
+                        class="btn btn--success btn--shadow w-100 btn-lg bal-btn" data-act="add"
+                        data-balance-type="{{ \App\Constants\Status::BALANCE_TYPE_EARNING }}" data-balance-label="@lang('Earning Balance')">
+                        <i class="las la-plus-circle"></i> @lang('Add Earning')
                     </button>
                 </div>
 
                 <div class="flex-fill">
                     <button data-bs-toggle="modal" data-bs-target="#addSubModal"
-                        class="btn btn--danger btn--shadow w-100 btn-lg bal-btn" data-act="sub">
-                        <i class="las la-minus-circle"></i> @lang('Balance')
+                        class="btn btn--danger btn--shadow w-100 btn-lg bal-btn" data-act="sub"
+                        data-balance-type="{{ \App\Constants\Status::BALANCE_TYPE_EARNING }}" data-balance-label="@lang('Earning Balance')">
+                        <i class="las la-minus-circle"></i> @lang('Deduct Earning')
+                    </button>
+                </div>
+
+                <div class="flex-fill">
+                    <button data-bs-toggle="modal" data-bs-target="#addSubModal"
+                        class="btn btn--success btn--shadow w-100 btn-lg bal-btn" data-act="add"
+                        data-balance-type="{{ \App\Constants\Status::BALANCE_TYPE_WALLET }}" data-balance-label="@lang('Wallet Balance')">
+                        <i class="las la-plus-circle"></i> @lang('Add Wallet')
+                    </button>
+                </div>
+
+                <div class="flex-fill">
+                    <button data-bs-toggle="modal" data-bs-target="#addSubModal"
+                        class="btn btn--danger btn--shadow w-100 btn-lg bal-btn" data-act="sub"
+                        data-balance-type="{{ \App\Constants\Status::BALANCE_TYPE_WALLET }}" data-balance-label="@lang('Wallet Balance')">
+                        <i class="las la-minus-circle"></i> @lang('Deduct Wallet')
                     </button>
                 </div>
 
@@ -246,9 +269,9 @@
     {{-- Add Sub Balance MODAL --}}
     <div id="addSubModal" class="modal fade" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
-            <div class="modal-content">
+                <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><span class="type"></span> <span>@lang('Balance')</span></h5>
+                    <h5 class="modal-title type"></h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="las la-times"></i>
                     </button>
@@ -257,6 +280,7 @@
                     class="balanceAddSub disableSubmission" method="POST">
                     @csrf
                     <input type="hidden" name="act">
+                    <input type="hidden" name="balance_type">
                     <div class="modal-body">
                         <div class="form-group">
                             <label>@lang('Amount')</label>
@@ -336,18 +360,21 @@
             "use strict"
 
 
-            $('.bal-btn').on('click', function() {
+                $('.bal-btn').on('click', function() {
 
-                $('.balanceAddSub')[0].reset();
+                    $('.balanceAddSub')[0].reset();
 
-                var act = $(this).data('act');
-                $('#addSubModal').find('input[name=act]').val(act);
-                if (act == 'add') {
-                    $('.type').text('Add');
-                } else {
-                    $('.type').text('Subtract');
-                }
-            });
+                    var act = $(this).data('act');
+                    var balanceType = $(this).data('balance-type');
+                    var balanceLabel = $(this).data('balance-label');
+                    $('#addSubModal').find('input[name=act]').val(act);
+                    $('#addSubModal').find('input[name=balance_type]').val(balanceType);
+                    if (act == 'add') {
+                        $('.type').text('Add ' + balanceLabel);
+                    } else {
+                        $('.type').text('Subtract ' + balanceLabel);
+                    }
+                });
 
             let mobileElement = $('.mobile-code');
             $('select[name=country]').on('change', function() {

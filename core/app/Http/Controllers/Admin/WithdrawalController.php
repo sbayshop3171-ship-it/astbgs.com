@@ -142,6 +142,9 @@ class WithdrawalController extends Controller
         $transaction->remark = 'withdraw_reject';
         $transaction->details = 'Refunded for withdrawal rejection';
         $transaction->trx = $withdraw->trx;
+        $transaction->balance_type = Status::BALANCE_TYPE_EARNING;
+        $transaction->reference_type = 'withdrawal';
+        $transaction->reference_id = $withdraw->id;
         $transaction->save();
 
         notify($user, 'WITHDRAW_REJECT', [

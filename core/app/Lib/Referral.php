@@ -2,6 +2,7 @@
 
 namespace App\Lib;
 
+use App\Constants\Status;
 use App\Models\Transaction;
 use App\Models\User;
 
@@ -26,6 +27,7 @@ class Referral
             $transaction->details      = 'Referral commission for subscribe plan by @' . $user->username;
             $transaction->trx          = $trx;
             $transaction->remark       = 'referral_commission';
+            $transaction->balance_type = Status::BALANCE_TYPE_EARNING;
             $transaction->save();
 
             createPlanHistory($planId, $refAmount, '-', 'referral_commission');
