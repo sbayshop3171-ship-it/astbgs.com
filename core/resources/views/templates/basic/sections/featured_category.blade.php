@@ -8,6 +8,7 @@ $categories = App\Models\Category::active()
     },
     ])
     ->featured()
+    ->having('products_count', '>', 0)
     ->orderByDesc('products_count')
     ->limit(6)
     ->get();
