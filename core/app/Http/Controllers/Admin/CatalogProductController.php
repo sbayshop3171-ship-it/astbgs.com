@@ -128,7 +128,10 @@ class CatalogProductController extends Controller
     protected function persist(Request $request, Product $product)
     {
         $isNew = !$product->exists;
+        $isOrderProduct = $request->product_type === Status::PRODUCT_TYPE_OPTION_REQUEST;
         $requiredImage = $isNew ? 'required' : 'nullable';
+        $catalogImageRule = $isOrderProduct ? 'nullable' : $requiredImage;
+        $galleryRule = 'nullable';
 
         $validation = [
             'title'               => 'required|string|max:255',
@@ -142,13 +145,13 @@ class CatalogProductController extends Controller
                 Status::PRODUCT_AVAILABILITY_UNAVAILABLE,
             ]),
             'base_price'          => 'required|numeric|min:0',
-            'thumbnail'           => [$requiredImage, 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
-            'preview_image'       => [$requiredImage, 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
+            'thumbnail'           => [$catalogImageRule, 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
+            'preview_image'       => [$catalogImageRule, 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
             'demo_url'            => 'nullable|url',
             'tags'                => 'nullable|array',
             'tags.*'              => 'nullable|string|max:100',
             'screenshots'         => 'nullable|file|mimes:zip',
-            'gallery_images'      => 'nullable|array',
+            'gallery_images'      => [$galleryRule, 'array'],
             'gallery_images.*'    => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])],
             'options'             => 'nullable|array',
             'options.*.name'      => 'nullable|string|max:255',
@@ -169,6 +172,18 @@ class CatalogProductController extends Controller
         }
 
         $request->validate($validation);
+
+        if (
+            $isOrderProduct
+            && !$request->hasFile('gallery_images')
+            && !$request->hasFile('preview_image')
+            && !$request->hasFile('thumbnail')
+            && !$this->productHasCatalogImages($product)
+        ) {
+            throw ValidationException::withMessages([
+                'gallery_images' => 'Upload at least one product image for order products.',
+            ]);
+        }
 
         $submittedOptions = collect($request->input('options', []))
             ->filter(fn($option) => filled($option['name'] ?? null))
@@ -219,15 +234,27 @@ class CatalogProductController extends Controller
         $product->attribute_info = $formProcessor ? $formProcessor->processFormData($request, $form->form_data) : [];
 
         if ($request->hasFile('thumbnail')) {
-            $this->uploadThumbnail($request, $product);
+            $this->uploadThumbnail($request->file('thumbnail'), $product);
         }
 
         if ($request->hasFile('preview_image')) {
-            $this->uploadPreviewImage($request, $product);
+            $this->uploadPreviewImage($request->file('preview_image'), $product);
+        }
+
+        if ($isOrderProduct && !$request->hasFile('thumbnail') && $request->hasFile('preview_image')) {
+            $this->uploadThumbnail($request->file('preview_image'), $product);
+        }
+
+        if ($isOrderProduct && !$request->hasFile('preview_image') && $request->hasFile('thumbnail')) {
+            $this->uploadPreviewImage($request->file('thumbnail'), $product);
         }
 
         if ($request->hasFile('gallery_images')) {
             $this->uploadGalleryImages($request, $product);
+
+            if ($isOrderProduct) {
+                $this->syncOrderProductPrimaryImages($request, $product);
+            }
         } elseif ($request->hasFile('screenshots')) {
             $this->uploadScreenshots($request, $product);
         }
@@ -339,27 +366,27 @@ class CatalogProductController extends Controller
         return is_numeric($reference) ? (int) $reference : null;
     }
 
-    protected function uploadThumbnail(Request $request, Product $product): void
+    protected function uploadThumbnail($file, Product $product): void
     {
         $product->thumbnail = fileUploader(
-            $request->thumbnail,
+            $file,
             getFilePath('productThumbnail') . '/' . $product->slug,
             getFileSize('productThumbnail'),
             $product->thumbnail ?? null
         );
     }
 
-    protected function uploadPreviewImage(Request $request, Product $product): void
+    protected function uploadPreviewImage($file, Product $product): void
     {
         $product->preview_image = fileUploader(
-            $request->preview_image,
+            $file,
             getFilePath('productPreview') . '/' . $product->slug,
             getFileSize('productPreview'),
             $product->preview_image ?? null
         );
 
         $product->inline_preview_image = fileUploader(
-            $request->preview_image,
+            $file,
             getFilePath('productInlinePreview') . '/' . $product->slug,
             getFileSize('productInlinePreview'),
             $product->inline_preview_image ?? null
@@ -387,6 +414,25 @@ class CatalogProductController extends Controller
         foreach ($request->file('gallery_images', []) as $index => $image) {
             fileUploader($image, $extractedPath, null, null, null, 'gallery-' . ($index + 1) . '.' . $image->getClientOriginalExtension());
         }
+    }
+
+    protected function syncOrderProductPrimaryImages(Request $request, Product $product): void
+    {
+        $coverImage = collect($request->file('gallery_images', []))->first();
+
+        if (!$coverImage) {
+            return;
+        }
+
+        $this->uploadThumbnail($coverImage, $product);
+        $this->uploadPreviewImage($coverImage, $product);
+    }
+
+    protected function productHasCatalogImages(Product $product): bool
+    {
+        return filled($product->preview_image)
+            || filled($product->thumbnail)
+            || count($product->screenshots()) > 0;
     }
 
     protected function resetGalleryDirectory(string $path): void

@@ -1,10 +1,19 @@
 @php
     $isOrderProduct = $product->isAdminOrderProduct();
     $previewImageUrl = getImage(getFilePath('productPreview') . '/' . productFilePath($product, 'preview_image'), getFileSize('productPreview'));
-    $galleryImages = collect([$previewImageUrl]);
 
-    foreach ($product->screenshots() as $screenshotPath) {
-        $galleryImages->push(getImage($screenshotPath));
+    $galleryImages = collect();
+
+    if ($isOrderProduct && count($product->screenshots())) {
+        foreach ($product->screenshots() as $screenshotPath) {
+            $galleryImages->push(getImage($screenshotPath));
+        }
+    } else {
+        $galleryImages->push($previewImageUrl);
+
+        foreach ($product->screenshots() as $screenshotPath) {
+            $galleryImages->push(getImage($screenshotPath));
+        }
     }
 
     $galleryImages = $galleryImages->filter()->unique()->values();

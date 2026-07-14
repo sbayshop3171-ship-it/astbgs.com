@@ -723,7 +723,8 @@ class CatalogRuntimeCheck
 
     private function setupLegacyProduct(): void
     {
-        $product = Product::where('managed_by_admin', Status::NO)->where('status', Status::PRODUCT_APPROVED)->orderBy('id')->first();
+        $legacyTitle = $this->prefix . ' Legacy Download';
+        $product = Product::where('title', $legacyTitle)->where('managed_by_admin', Status::NO)->where('status', Status::PRODUCT_APPROVED)->first();
 
         if ($product && $product->file && file_exists(getFilePath('productFile') . '/' . $product->slug . '/' . $product->file)) {
             $this->legacyProduct = $product;
@@ -731,7 +732,6 @@ class CatalogRuntimeCheck
         }
 
         $legacyAuthor = User::find(9) ?? User::find(6);
-        $legacyTitle = $this->prefix . ' Legacy Download';
         $legacySlug = Str::slug($legacyTitle) . '-' . strtolower(Str::random(4));
         $legacyFileName = 'legacy-download.zip';
         $legacyPath = getFilePath('productFile') . '/' . $legacySlug;

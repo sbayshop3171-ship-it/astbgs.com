@@ -30,7 +30,7 @@
                         <ul class="mb-0 small">
                             <li>@lang('Add one or more selectable options so the buyer can choose from a dropdown')</li>
                             <li>@lang('Use Fixed Price for one exact amount, or Min-Max Range when the buyer must enter an allowed request amount')</li>
-                            <li>@lang('Preview image and description will be shown on the product detail page, but Live Preview and review tabs stay hidden')</li>
+                            <li>@lang('Upload one or many product images. The first image will be used automatically as the cover image on cards and landing pages')</li>
                             <li>@lang('After the buyer selects an option, the flow can go directly to secure checkout')</li>
                         </ul>
                     </div>
@@ -68,7 +68,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-lg-3">
+                            <div class="col-lg-3 js-subcategory-wrapper">
                                 <label class="form-label">@lang('Subcategory')</label>
                                 <select name="subcategory_id" class="form-control select2 subcategory-switch" data-minimum-results-for-search="-1" required>
                                     <option value="">@lang('Select One')</option>
@@ -76,7 +76,7 @@
                                         <option value="{{ $subcategory->id }}" @selected((string) old('subcategory_id', $selectedSubcategory) === (string) $subcategory->id)>{{ __($subcategory->name) }}</option>
                                     @endforeach
                                 </select>
-                                <div class="small text-muted mt-1">@lang('Choosing a subcategory reloads the page to load matching custom fields and admin recommendations.')</div>
+                                <div class="small text-muted mt-1">@lang('Choosing a subcategory loads matching custom fields and admin recommendations without resetting the form.')</div>
                             </div>
                             <div class="col-lg-3">
                                 <label class="form-label">@lang('Availability')</label>
@@ -97,11 +97,11 @@
                                 <label class="form-label">@lang('Description')</label>
                                 <textarea name="description" class="form-control" rows="6" required>{{ old('description', $product->description) }}</textarea>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-4 downloadable-only">
                                 <label class="form-label">@lang('Thumbnail')</label>
                                 <input type="file" name="thumbnail" class="form-control" accept=".jpg,.jpeg,.png">
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-4 downloadable-only">
                                 <label class="form-label">@lang('Preview Image')</label>
                                 <input type="file" name="preview_image" class="form-control" accept=".jpg,.jpeg,.png">
                                 <div class="small text-muted mt-1">@lang('Main cover image for the landing page.')</div>
@@ -128,14 +128,14 @@
 
                 <div class="card mb-4 order-only d-none">
                     <div class="card-header">
-                        <h5 class="mb-0">@lang('Order Product Gallery')</h5>
+                        <h5 class="mb-0">@lang('Product Images')</h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-lg-12">
                                 <label class="form-label">@lang('Gallery Images')</label>
                                 <input type="file" name="gallery_images[]" class="form-control" accept=".jpg,.jpeg,.png,.webp" multiple>
-                                <div class="small text-muted mt-1">@lang('Upload one or many images. If you upload new gallery images, the old gallery will be replaced.')</div>
+                                <div class="small text-muted mt-1">@lang('Upload one or many images. The first image becomes the main cover automatically, and all uploaded images appear as the public slider/gallery.')</div>
                                 @if($product->exists && count($product->screenshots()))
                                     <div class="small text-success mt-2">
                                         {{ count($product->screenshots()) }} @lang('gallery image(s) currently saved for this product')
@@ -146,16 +146,18 @@
                     </div>
                 </div>
 
-                @if($form)
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">@lang('Subcategory Fields')</h5>
+                <div id="subcategory-fields-panel">
+                    @if($form)
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">@lang('Subcategory Fields')</h5>
+                            </div>
+                            <div class="card-body">
+                                <x-viser-form identifier="id" :identifierValue="$form->id" :editData="$product->attribute_info ?? []" />
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <x-viser-form identifier="id" :identifierValue="$form->id" :editData="$product->attribute_info ?? []" />
-                        </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
 
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -307,11 +309,108 @@
         (function($) {
             "use strict";
 
-            $('.select2').select2();
-            $('.select2-tag').select2({
-                tags: true,
-                tokenSeparators: [',']
-            });
+            const dependencyEndpoint = @json($product->exists ? route('admin.catalog.products.edit', $product->id) : route('admin.catalog.products.create'));
+            let dependencyRequestSerial = 0;
+
+            function initSelect2(scope) {
+                const $scope = scope ? $(scope) : $(document);
+
+                $scope.find('.select2').each(function() {
+                    const $element = $(this);
+
+                    if ($element.hasClass('select2-hidden-accessible')) {
+                        return;
+                    }
+
+                    $element.select2({
+                        minimumResultsForSearch: $element.data('minimum-results-for-search') ?? 0
+                    });
+                });
+
+                $scope.find('.select2-tag').each(function() {
+                    const $element = $(this);
+
+                    if ($element.hasClass('select2-hidden-accessible')) {
+                        return;
+                    }
+
+                    $element.select2({
+                        tags: true,
+                        tokenSeparators: [',']
+                    });
+                });
+            }
+
+            function buildDependencyUrl(categoryId, subcategoryId) {
+                const url = new URL(dependencyEndpoint, window.location.origin);
+
+                if (categoryId) {
+                    url.searchParams.set('category_id', categoryId);
+                }
+
+                if (subcategoryId) {
+                    url.searchParams.set('subcategory_id', subcategoryId);
+                }
+
+                return url;
+            }
+
+            function setDependencyLoading(isLoading) {
+                $('.category-switch, .subcategory-switch').prop('disabled', isLoading);
+                $('#subcategory-fields-panel').css({
+                    opacity: isLoading ? '0.6' : '1',
+                    pointerEvents: isLoading ? 'none' : 'auto'
+                });
+            }
+
+            async function refreshDependencySections(categoryId, subcategoryId) {
+                const requestId = ++dependencyRequestSerial;
+                const dependencyUrl = buildDependencyUrl(categoryId, subcategoryId);
+
+                setDependencyLoading(true);
+
+                try {
+                    const response = await fetch(dependencyUrl.toString(), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Dependency refresh failed');
+                    }
+
+                    const html = await response.text();
+
+                    if (requestId !== dependencyRequestSerial) {
+                        return;
+                    }
+
+                    const documentFragment = new DOMParser().parseFromString(html, 'text/html');
+                    const nextSubcategoryWrapper = documentFragment.querySelector('.js-subcategory-wrapper');
+                    const nextSubcategoryFields = documentFragment.querySelector('#subcategory-fields-panel');
+
+                    if (nextSubcategoryWrapper) {
+                        $('.js-subcategory-wrapper').replaceWith(nextSubcategoryWrapper.outerHTML);
+                        initSelect2($('.js-subcategory-wrapper'));
+                    }
+
+                    if (nextSubcategoryFields) {
+                        $('#subcategory-fields-panel').replaceWith(nextSubcategoryFields.outerHTML);
+                        initSelect2($('#subcategory-fields-panel'));
+                    }
+
+                    window.history.replaceState({}, '', `${dependencyUrl.pathname}${dependencyUrl.search}`);
+                } catch (error) {
+                    window.location = dependencyUrl.toString();
+                } finally {
+                    if (requestId === dependencyRequestSerial) {
+                        setDependencyLoading(false);
+                    }
+                }
+            }
+
+            initSelect2();
 
             let optionIndex = $('#option-rows .option-row').length;
             let fileIndex = $('#file-rows .file-row').length;
@@ -474,11 +573,12 @@
                 toggleOptionPricingRow($(this));
             });
 
-            $('.category-switch, .subcategory-switch').on('change', function() {
-                const categoryId = $('.category-switch').val();
-                const subcategoryId = $('.subcategory-switch').val();
-                const baseUrl = `{{ $product->exists ? route('admin.catalog.products.edit', $product->id) : route('admin.catalog.products.create') }}`;
-                window.location = `${baseUrl}?category_id=${categoryId || ''}&subcategory_id=${subcategoryId || ''}`;
+            $(document).on('change', '.category-switch', function() {
+                refreshDependencySections($(this).val(), '');
+            });
+
+            $(document).on('change', '.subcategory-switch', function() {
+                refreshDependencySections($('.category-switch').val(), $(this).val());
             });
 
             $('#add-option-row').on('click', function() {
