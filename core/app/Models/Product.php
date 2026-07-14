@@ -70,7 +70,8 @@ class Product extends Model {
     }
 
     public function scopeCatalogManaged($query) {
-        return $query->where('managed_by_admin', Status::YES);
+        return $query->where('managed_by_admin', Status::YES)
+            ->where('status', '!=', Status::PRODUCT_PERMANENT_DOWN);
     }
 
     public function scopeCatalogPublished($query) {

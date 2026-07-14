@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Constants\Status;
 use App\Models\Comment;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -9,7 +10,6 @@ use App\Models\ProductView;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
 
 class ProductDeletionService
 {
@@ -18,7 +18,8 @@ class ProductDeletionService
         $product->loadMissing(['reviews.reportDetails.attachments']);
 
         if ($this->hasProtectedHistory($product)) {
-            throw new RuntimeException('This product already has customer orders or download history, so it cannot be deleted safely.');
+            $this->archiveProduct($product);
+            return;
         }
 
         $directories = $this->productDirectories($product);
@@ -84,6 +85,26 @@ class ProductDeletionService
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function archiveProduct(Product $product): void
+    {
+        DB::transaction(function () use ($product) {
+            $product->users()->detach();
+            $product->collections()->detach();
+
+            $product->status = Status::PRODUCT_PERMANENT_DOWN;
+
+            if (array_key_exists('is_published', $product->getAttributes())) {
+                $product->is_published = Status::NO;
+            }
+
+            if (array_key_exists('availability_status', $product->getAttributes())) {
+                $product->availability_status = Status::PRODUCT_AVAILABILITY_UNAVAILABLE;
+            }
+
+            $product->save();
+        });
     }
 
     protected function deleteOptionalRelation(string $table, callable $callback): void
