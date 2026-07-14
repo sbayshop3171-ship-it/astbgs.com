@@ -104,22 +104,43 @@
                             <div class="col-lg-4">
                                 <label class="form-label">@lang('Preview Image')</label>
                                 <input type="file" name="preview_image" class="form-control" accept=".jpg,.jpeg,.png">
+                                <div class="small text-muted mt-1">@lang('Main cover image for the landing page.')</div>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-4 downloadable-only">
                                 <label class="form-label">@lang('Screenshots Zip')</label>
                                 <input type="file" name="screenshots" class="form-control" accept=".zip">
                             </div>
-                            <div class="col-lg-6">
+                            <div class="col-lg-6 downloadable-only">
                                 <label class="form-label">@lang('Demo URL')</label>
                                 <input type="url" name="demo_url" class="form-control" value="{{ old('demo_url', $product->demo_url) }}">
                             </div>
-                            <div class="col-lg-6">
+                            <div class="col-lg-6 downloadable-only">
                                 <label class="form-label">@lang('Tags')</label>
                                 <select name="tags[]" class="form-control select2-tag" multiple="multiple">
                                     @foreach(old('tags', $product->tags ?? []) as $tag)
                                         <option value="{{ $tag }}" selected>{{ $tag }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4 order-only d-none">
+                    <div class="card-header">
+                        <h5 class="mb-0">@lang('Order Product Gallery')</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-lg-12">
+                                <label class="form-label">@lang('Gallery Images')</label>
+                                <input type="file" name="gallery_images[]" class="form-control" accept=".jpg,.jpeg,.png,.webp" multiple>
+                                <div class="small text-muted mt-1">@lang('Upload one or many images. If you upload new gallery images, the old gallery will be replaced.')</div>
+                                @if($product->exists && count($product->screenshots()))
+                                    <div class="small text-success mt-2">
+                                        {{ count($product->screenshots()) }} @lang('gallery image(s) currently saved for this product')
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -329,6 +350,7 @@
             function toggleDownloadableSection() {
                 const isDownloadable = $('.catalog-product-type').val() === 'downloadable';
                 $('.downloadable-only')[isDownloadable ? 'removeClass' : 'addClass']('d-none');
+                $('.order-only').toggleClass('d-none', isDownloadable);
                 $('.downloadable-guide').toggleClass('d-none', !isDownloadable);
                 $('.order-guide').toggleClass('d-none', isDownloadable);
                 $('.base-price-label').text(isDownloadable ? 'Base Price' : 'Base Price / Fallback Price');

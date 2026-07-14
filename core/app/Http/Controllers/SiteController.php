@@ -198,7 +198,7 @@ class SiteController extends Controller {
     }
 
     public function productDetails($slug) {
-        $product = Product::with(['author', 'activeOptions', 'activeFiles'])->countComment()->where(['slug' => $slug])->firstOrFail();
+        $product = Product::with(['author', 'activeOptions', 'activeFiles', 'category', 'subcategory'])->countComment()->where(['slug' => $slug])->firstOrFail();
 
         if (in_array($product->status, [Status::PRODUCT_PERMANENT_DOWN, Status::PRODUCT_HARD_REJECTED])) {
             abort(404);

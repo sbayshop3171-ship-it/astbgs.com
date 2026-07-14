@@ -301,16 +301,29 @@ class CatalogRuntimeCheck
 
         $this->record(
             'option.detail.selector.visible',
-            str_contains($detailHtml, 'Choose an option')
-                && str_contains($detailHtml, $this->optionChoice->name)
-                && str_contains($detailHtml, showAmount($this->optionChoice->price)),
-            'Option product details should render selector with option names and visible pricing'
+            (str_contains($detailHtml, 'Choose an option') || str_contains($detailHtml, 'Service Option'))
+                && str_contains($detailHtml, $this->optionChoice->name),
+            'Option product details should render selector with option names'
+        );
+
+        $this->record(
+            'option.detail.starts.unselected',
+            str_contains($detailHtml, 'Select an option to see price')
+                && str_contains($detailHtml, 'Select One'),
+            'Order product details should keep the option dropdown unselected until the buyer chooses one'
         );
 
         $this->record(
             'option.detail.requested.amount.visible',
             str_contains($detailHtml, 'Requested Amount'),
             'Option product details should render requested amount field for ranged options'
+        );
+
+        $this->record(
+            'option.detail.gallery.visible',
+            str_contains($detailHtml, 'order-product-main-image')
+                && str_contains($detailHtml, 'order-product-thumb'),
+            'Order product details should render a landing-style image gallery when multiple images exist'
         );
 
         $this->record(

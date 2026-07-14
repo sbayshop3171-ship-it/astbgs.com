@@ -22,6 +22,18 @@
                 </li>
             @endif
             <li class="product-info__item">
+                <span class="product-info__title">@lang('Category')</span>
+                <div class="product-info__content">
+                    <span>{{ __($product->category?->name) }}</span>
+                </div>
+            </li>
+            <li class="product-info__item">
+                <span class="product-info__title">@lang('Subcategory')</span>
+                <div class="product-info__content">
+                    <span>{{ __($product->subcategory?->name) }}</span>
+                </div>
+            </li>
+            <li class="product-info__item">
                 <span class="product-info__title">@lang('Availability')</span>
                 <div class="product-info__content">
                     <span>{{ __(ucfirst($product->availability_status ?? 'available')) }}</span>

@@ -1,4 +1,5 @@
 <div class="col-lg-4 ps-xxl-5">
+    @php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
     <div class="common-sidebar">
         @if ($product->managed_by_admin)
             @include('Template::partials.catalog_purchase_bar')
@@ -6,7 +7,9 @@
             @include('Template::partials.download_bar')
         @endif
 
-        @include('Template::partials.author_profile')
+        @if (!$isOrderProduct)
+            @include('Template::partials.author_profile')
+        @endif
         @include('Template::user.product.attribute')
     </div>
 

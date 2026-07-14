@@ -126,6 +126,8 @@ class CatalogProductController extends Controller
             'tags'                => 'nullable|array',
             'tags.*'              => 'nullable|string|max:100',
             'screenshots'         => 'nullable|file|mimes:zip',
+            'gallery_images'      => 'nullable|array',
+            'gallery_images.*'    => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png', 'webp'])],
             'options'             => 'nullable|array',
             'options.*.name'      => 'nullable|string|max:255',
             'options.*.price'     => 'nullable|numeric|min:0',
@@ -202,7 +204,9 @@ class CatalogProductController extends Controller
             $this->uploadPreviewImage($request, $product);
         }
 
-        if ($request->hasFile('screenshots')) {
+        if ($request->hasFile('gallery_images')) {
+            $this->uploadGalleryImages($request, $product);
+        } elseif ($request->hasFile('screenshots')) {
             $this->uploadScreenshots($request, $product);
         }
 
@@ -348,11 +352,27 @@ class CatalogProductController extends Controller
         $zip = new \ZipArchive();
         $zip->open($zipPath);
 
-        if (is_dir($extractedPath)) {
-            fileManager()->removeDirectory($extractedPath);
+        $this->resetGalleryDirectory($extractedPath);
+        $zip->extractTo($extractedPath);
+    }
+
+    protected function uploadGalleryImages(Request $request, Product $product): void
+    {
+        $extractedPath = getFilePath('screenshots') . '/' . $product->slug . '/screenshots';
+
+        $this->resetGalleryDirectory($extractedPath);
+
+        foreach ($request->file('gallery_images', []) as $index => $image) {
+            fileUploader($image, $extractedPath, null, null, null, 'gallery-' . ($index + 1) . '.' . $image->getClientOriginalExtension());
+        }
+    }
+
+    protected function resetGalleryDirectory(string $path): void
+    {
+        if (is_dir($path)) {
+            fileManager()->removeDirectory($path);
         }
 
-        fileManager()->makeDirectory($extractedPath);
-        $zip->extractTo($extractedPath);
+        fileManager()->makeDirectory($path);
     }
 }

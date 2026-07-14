@@ -12,11 +12,19 @@
 @endphp
 
 <div class="common-sidebar__item">
-    <div class="common-sidebar__content">
+    <div class="common-sidebar__content {{ $isOrderProduct ? 'order-purchase-card' : '' }}">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
             <div>
-                <h4 class="mb-1">{{ $product->catalogPriceLabel }}</h4>
-                <p class="mb-0 text-muted small">@lang('Secure cart and checkout flow')</p>
+                <h4 class="mb-1 catalog-price-heading">
+                    @if ($isOrderProduct && $hasOptions)
+                        @lang('Select an option to see price')
+                    @else
+                        {{ $product->catalogPriceLabel }}
+                    @endif
+                </h4>
+                <p class="mb-0 text-muted small">
+                    @lang($isOrderProduct ? 'Simple service checkout for this product' : 'Secure cart and checkout flow')
+                </p>
             </div>
             <span class="badge badge--{{ $availabilityClass }}">{{ __(ucfirst($product->availability_status)) }}</span>
         </div>
@@ -39,7 +47,7 @@
 
             @if ($hasOptions)
                 <div class="form-group">
-                    <label class="form-label">@lang('Choose an option')</label>
+                    <label class="form-label">@lang($isOrderProduct ? 'Service Option' : 'Choose an option')</label>
                     <select name="product_option_id" class="form-control catalog-option-select" required>
                         <option value="">@lang('Select One')</option>
                         @foreach ($activeOptions as $option)
@@ -70,8 +78,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">@lang('Request Note')</label>
-                    <textarea name="request_note" class="form-control" rows="4" placeholder="@lang('Add any information the admin should review')">{{ old('request_note') }}</textarea>
+                    <label class="form-label">@lang('About Your Order')</label>
+                    <textarea name="request_note" class="form-control" rows="4" placeholder="@lang('Add any simple note or requirement for this order')">{{ old('request_note') }}</textarea>
                 </div>
             @endif
 
@@ -80,7 +88,7 @@
                 <input type="number" min="1" max="99" name="quantity" class="form-control" value="{{ old('quantity', 1) }}">
             </div>
 
-            <button type="submit" class="btn btn--base w-100">
+            <button type="submit" class="btn btn--base w-100 catalog-submit-button" @disabled($isOrderProduct && $hasOptions)>
                 @lang($isOrderProduct ? 'Continue to Checkout' : ($hasOptions ? 'Add to Cart' : $product->catalogActionLabel))
             </button>
         </form>
@@ -111,6 +119,7 @@
 
             const optionSelect = form.find('.catalog-option-select');
             const optionMetaBox = form.find('.option-meta-box');
+            const priceHeading = form.find('.catalog-price-heading');
             const selectedPrice = form.find('.selected-price');
             const selectedPricingType = form.find('.selected-pricing-type');
             const optionRangeText = form.find('.option-range-text');
@@ -119,6 +128,7 @@
             const selectedNote = form.find('.selected-note');
             const requestedAmountGroup = form.find('.requested-amount-group');
             const requestedAmountInput = form.find('.requested-amount-input');
+            const submitButton = form.find('.catalog-submit-button');
 
             function toggleOptionDetails() {
                 if (!optionSelect.length) {
@@ -138,6 +148,16 @@
                 optionMetaBox.toggleClass('d-none', !hasValue);
                 selectedPrice.text(price);
                 selectedPricingType.text(hasRange ? @json(__('Min-Max Range')) : @json(__('Fixed Price')));
+                @if ($isOrderProduct && $hasOptions)
+                if (priceHeading.length) {
+                    priceHeading.text(hasValue ? price : @json(__('Select an option to see price')));
+                }
+                @endif
+                @if ($isOrderProduct && $hasOptions)
+                    submitButton.prop('disabled', !hasValue);
+                @else
+                    submitButton.prop('disabled', false);
+                @endif
 
                 optionRangeText.toggleClass('d-none', !hasValue || !hasRange);
                 if (hasRange) {
