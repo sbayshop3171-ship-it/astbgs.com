@@ -12,8 +12,10 @@ use App\Models\ProductFile;
 use App\Models\ProductOption;
 use App\Models\Subcategory;
 use App\Rules\FileTypeValidate;
+use App\Support\ProductDeletionService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class CatalogProductController extends Controller
 {
@@ -61,6 +63,26 @@ class CatalogProductController extends Controller
         $product = Product::catalogManaged()->with(['options', 'files'])->findOrFail($id);
 
         return $this->persist($request, $product);
+    }
+
+    public function destroy($id, ProductDeletionService $productDeletionService)
+    {
+        $product = Product::catalogManaged()->findOrFail($id);
+
+        try {
+            $productDeletionService->delete($product);
+        } catch (RuntimeException $exception) {
+            $notify[] = ['error', $exception->getMessage()];
+            return to_route('admin.catalog.products.index')->withNotify($notify);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            $notify[] = ['error', 'Could not delete the catalog product'];
+            return to_route('admin.catalog.products.index')->withNotify($notify);
+        }
+
+        $notify[] = ['success', 'Catalog product deleted successfully'];
+        return to_route('admin.catalog.products.index')->withNotify($notify);
     }
 
     protected function formView(Product $product, string $pageTitle, Request $request)

@@ -129,6 +129,7 @@ Route::middleware('admin')->group(function () {
         Route::post('store', 'store')->name('store');
         Route::get('{id}/edit', 'edit')->name('edit');
         Route::post('{id}/update', 'update')->name('update');
+        Route::post('{id}/delete', 'destroy')->name('destroy');
     });
 
     Route::controller('ManageOrderController')->prefix('orders')->name('orders.')->group(function () {

@@ -13,7 +13,9 @@ use App\Models\Form;
 use App\Models\Product;
 use App\Models\Subcategory;
 use App\Rules\FileTypeValidate;
+use App\Support\ProductDeletionService;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class ProductController extends Controller
 {
@@ -253,6 +255,26 @@ class ProductController extends Controller
 
         $notify[] = ['success', 'Your message submitted successfully'];
         return back()->withNotify($notify);
+    }
+
+    public function destroy($id, ProductDeletionService $productDeletionService)
+    {
+        $product = $this->authorOwnedProduct($id, 'id');
+
+        try {
+            $productDeletionService->delete($product);
+        } catch (RuntimeException $exception) {
+            $notify[] = ['error', $exception->getMessage()];
+            return back()->withNotify($notify);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            $notify[] = ['error', 'Could not delete the product'];
+            return back()->withNotify($notify);
+        }
+
+        $notify[] = ['success', 'Product deleted successfully'];
+        return to_route('user.author.hidden.items')->withNotify($notify);
     }
 
     private function uploadScreenshot($request, &$product, $id)

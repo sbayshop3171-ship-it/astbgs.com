@@ -93,9 +93,16 @@
                                             <span class="badge badge--secondary">{{ __(ucfirst($product->availability_status)) }}</span>
                                         </td>
                                         <td>
-                                            <a href="{{ route('admin.catalog.products.edit', $product->id) }}" class="btn btn-outline--primary btn-sm">
-                                                <i class="las la-pen"></i> @lang('Edit')
-                                            </a>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <a href="{{ route('admin.catalog.products.edit', $product->id) }}" class="btn btn-outline--primary btn-sm">
+                                                    <i class="las la-pen"></i> @lang('Edit')
+                                                </a>
+                                                <button type="button" class="btn btn-outline--danger btn-sm confirmationBtn"
+                                                    data-action="{{ route('admin.catalog.products.destroy', $product->id) }}"
+                                                    data-question="@lang('Are you sure to delete this product? It will also be removed from the user storefront.')">
+                                                    <i class="las la-trash"></i> @lang('Delete')
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -115,4 +122,5 @@
             </div>
         </div>
     </div>
+    <x-confirmation-modal />
 @endsection
