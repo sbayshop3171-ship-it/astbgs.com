@@ -1,7 +1,9 @@
 @extends('Template::layouts.frontend')
 
 @section('content')
-    <section class="product-details pt-60 pb-120">
+    @php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
+
+    <section class="product-details pt-60 pb-120 {{ $isOrderProduct ? 'order-product-page' : '' }}">
         <div class="container">
             @include('Template::user.product.top')
             <div class="row gy-4">
@@ -51,24 +53,29 @@
 
 @push('style')
     <style>
+        .order-product-page {
+            background: transparent;
+        }
+
         .order-product-landing {
             display: grid;
             gap: 24px;
         }
 
+        .order-product-page .common-sidebar__item,
         .order-product-gallery-card,
         .order-product-copy-card {
             background: #fff;
             border: 1px solid rgba(15, 23, 42, 0.08);
             border-radius: 18px;
             padding: 22px;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+            box-shadow: none;
         }
 
         .order-product-main-image {
             border-radius: 16px;
             overflow: hidden;
-            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            background: #fff;
             border: 1px solid rgba(15, 23, 42, 0.08);
         }
 
@@ -89,16 +96,17 @@
 
         .order-product-thumb {
             padding: 0;
-            border: 2px solid transparent;
+            border: 1px solid rgba(15, 23, 42, 0.08);
             border-radius: 14px;
             overflow: hidden;
             background: #fff;
             transition: .2s ease-in-out;
+            box-shadow: none;
         }
 
         .order-product-thumb.is-active {
             border-color: #16a34a;
-            box-shadow: 0 8px 20px rgba(22, 163, 74, 0.18);
+            box-shadow: none;
         }
 
         .order-product-thumb img {
