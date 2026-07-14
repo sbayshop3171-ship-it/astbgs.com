@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductView;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 class ProductDeletionService
@@ -40,14 +41,14 @@ class ProductDeletionService
 
             $product->activities()->delete();
             $product->changelogs()->delete();
-            $product->productData()->delete();
+            $this->deleteOptionalRelation('product_data', fn() => $product->productData()->delete());
             $product->downloadLogs()->delete();
             $product->earnings()->delete();
             $product->rejections()->delete();
             $product->files()->delete();
             $product->options()->delete();
 
-            ProductView::where('product_id', $product->id)->delete();
+            $this->deleteOptionalRelation('product_views', fn() => ProductView::where('product_id', $product->id)->delete());
 
             $product->delete();
         });
@@ -83,6 +84,15 @@ class ProductDeletionService
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function deleteOptionalRelation(string $table, callable $callback): void
+    {
+        if (!Schema::hasTable($table)) {
+            return;
+        }
+
+        $callback();
     }
 
     protected function cleanupFilesystem(array $directories, array $reviewAttachments): void
