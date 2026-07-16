@@ -37,6 +37,16 @@
                 @endif
 
                 <div class="flex-align gap-2">
+                    <a href="{{ route('cart.index') }}" class="header-cart-chip" aria-label="@lang('Shopping cart')">
+                        <span class="header-cart-chip__icon">
+                            <i class="las la-shopping-bag"></i>
+                        </span>
+                        <span class="header-cart-chip__content">
+                            <span class="header-cart-chip__label">@lang('Cart')</span>
+                            <span class="header-cart-chip__count" data-cart-count>{{ \App\Lib\CatalogCart::count() }}</span>
+                        </span>
+                    </a>
+
                     @guest
                         <ul class="top-menu-list flex-between">
                             <li class="top-menu-list__item">

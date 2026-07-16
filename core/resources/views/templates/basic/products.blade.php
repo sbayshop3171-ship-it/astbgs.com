@@ -203,6 +203,9 @@
                     type: 'GET',
                     success: function(response) {
                         $('#product-content').html(response.html);
+                        if (typeof window.refreshPremiumCartForms === 'function') {
+                            window.refreshPremiumCartForms($('#product-content'));
+                        }
                         if (response.pagination) {
                             $('.pagination-wrapper').html(response.pagination).hide();
                         }

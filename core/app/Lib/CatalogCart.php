@@ -18,11 +18,28 @@ class CatalogCart {
         return self::items()->values()->all();
     }
 
+    public static function find(string $cartKey): ?array {
+        return self::items()->get($cartKey);
+    }
+
+    public static function cartKeyFor(int $productId, ?int $optionId = null, $requestedAmount = null): string {
+        $normalizedAmount = filled($requestedAmount) ? (string) (float) $requestedAmount : '';
+
+        return md5($productId . ':' . ($optionId ?? 'base') . ':' . $normalizedAmount);
+    }
+
+    public static function findForProduct(int $productId, ?int $optionId = null, $requestedAmount = null): ?array {
+        $cartKey = self::cartKeyFor($productId, $optionId, $requestedAmount);
+
+        return self::find($cartKey);
+    }
+
     public static function add(Product $product, ?ProductOption $option = null, int $quantity = 1, ?string $requestNote = null, $requestedAmount = null): array {
         $items = self::items();
-        $normalizedAmount = filled($requestedAmount) ? (string) (float) $requestedAmount : '';
-        $cartKey = md5($product->id . ':' . ($option?->id ?? 'base') . ':' . $normalizedAmount);
+        $cartKey = self::cartKeyFor($product->id, $option?->id, $requestedAmount);
         $unitPrice = $option ? (float) $option->price : (float) ($product->base_price ?? 0);
+        $existingItem = $items->get($cartKey, []);
+        $existingQuantity = (int) ($existingItem['quantity'] ?? 0);
 
         $item = [
             'cart_key'          => $cartKey,
@@ -35,8 +52,8 @@ class CatalogCart {
             'product_option_id' => $option?->id,
             'option_name'       => $option?->name,
             'unit_price'        => $unitPrice,
-            'quantity'          => max(1, $quantity),
-            'request_note'      => $requestNote,
+            'quantity'          => min(99, max(1, $quantity) + $existingQuantity),
+            'request_note'      => $requestNote ?? ($existingItem['request_note'] ?? null),
             'requested_amount'  => filled($requestedAmount) ? (float) $requestedAmount : null,
             'availability_note' => $option?->availability_note,
             'min_amount'        => $option?->min_amount,
@@ -63,6 +80,29 @@ class CatalogCart {
         $items->put($cartKey, $item);
 
         session()->put(self::SESSION_KEY, $items->all());
+    }
+
+    public static function setQuantity(string $cartKey, int $quantity, array $attributes = []): ?array {
+        if ($quantity <= 0) {
+            self::remove($cartKey);
+
+            return null;
+        }
+
+        $items = self::items();
+        if (!$items->has($cartKey)) {
+            return null;
+        }
+
+        $item = $items->get($cartKey);
+        $item['quantity'] = min(99, max(1, $quantity));
+        $item['request_note'] = $attributes['request_note'] ?? $item['request_note'];
+        $item['requested_amount'] = filled($attributes['requested_amount'] ?? null) ? (float) $attributes['requested_amount'] : $item['requested_amount'];
+
+        $items->put($cartKey, $item);
+        session()->put(self::SESSION_KEY, $items->all());
+
+        return $item;
     }
 
     public static function remove(string $cartKey): void {

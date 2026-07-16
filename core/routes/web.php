@@ -67,6 +67,7 @@ Route::get('app/deposit/confirm/{hash}', 'Gateway\PaymentController@appDepositCo
 Route::controller('CartController')->prefix('cart')->name('cart.')->group(function () {
     Route::get('/', 'index')->name('index');
     Route::post('add/{slug}', 'add')->name('add');
+    Route::post('item/{cartKey}', 'setItemQuantity')->name('item.sync');
     Route::post('update', 'update')->name('update');
     Route::post('remove/{cartKey}', 'remove')->name('remove');
 });

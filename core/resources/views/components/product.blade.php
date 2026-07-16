@@ -1,4 +1,10 @@
-@php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
+@php
+    $isOrderProduct = $product->isAdminOrderProduct();
+    $activeOptions = $product->relationLoaded('activeOptions') ? $product->activeOptions : $product->activeOptions()->get();
+    $hasOptions = $activeOptions->isNotEmpty();
+    $existingCartItem = $product->managed_by_admin && !$hasOptions ? \App\Lib\CatalogCart::findForProduct($product->id) : null;
+    $initialQuantity = $existingCartItem['quantity'] ?? 1;
+@endphp
 <div class="product-card h-100">
     <div class="product-card__thumb">
         <a href="{{ route('product.details', $product->slug) }}" class="link" title="{{ __($product->title) }}">
@@ -43,7 +49,7 @@
                 <x-product-save :product="$product" />
             </div>
         </div>
-        <div class="flex-between align-items-end">
+        <div class="flex-between align-items-end gap-3">
             <div class="product-card__rating">
                 @if (!$isOrderProduct && ($product->total_review ?? 0) >= gs('min_reviews'))
                     <div class="rating-list">
@@ -57,20 +63,89 @@
                     </div>
                 @endif
             </div>
-            <div class="d-flex flex-column align-items-end gap-2">
+            <div class="d-flex flex-column align-items-stretch gap-2 product-card__actions">
                 @if ($product->managed_by_admin)
-                    @if ($product->hasActiveOptions())
-                        <a href="{{ route('product.details', $product->slug) }}" class="btn btn--base btn--sm mt-1">
-                            @lang('Select Options')
-                        </a>
-                    @else
-                        <form action="{{ route('cart.add', $product->slug) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="quantity" value="1">
-                            <input type="hidden" name="redirect_to" value="{{ $isOrderProduct ? 'checkout' : 'cart' }}">
-                            <button type="submit" class="btn btn--base btn--sm mt-1">@lang($isOrderProduct ? 'Checkout' : 'Buy Now')</button>
-                        </form>
-                    @endif
+                    <form action="{{ route('cart.add', $product->slug) }}" method="POST"
+                        class="premium-cart-form premium-cart-form--card"
+                        data-ajax-cart-form
+                        data-cart-default-label="{{ __($existingCartItem ? 'Update Cart' : 'Add to Cart') }}"
+                        data-cart-updated-label="{{ __('Update Cart') }}"
+                        data-cart-added-label="{{ __('Added!') }}"
+                        data-cart-key="{{ $existingCartItem['cart_key'] ?? '' }}"
+                        data-cart-item-url="{{ isset($existingCartItem['cart_key']) ? route('cart.item.sync', $existingCartItem['cart_key']) : '' }}"
+                        data-cart-option-required="{{ $hasOptions ? 'true' : 'false' }}"
+                        data-cart-price-placeholder="{{ $product->catalogPriceLabel }}"
+                        data-cart-label-pending="{{ __('Adding...') }}"
+                        data-cart-label-updating="{{ __('Updating...') }}">
+                        @csrf
+                        <input type="hidden" name="redirect_to" value="cart">
+
+                        @if ($hasOptions)
+                            <div class="premium-cart-card__option mb-2">
+                                <select name="product_option_id" class="form-control form-control-sm catalog-option-select premium-cart-select" data-cart-option-select>
+                                    <option value="">@lang('Select Option')</option>
+                                    @foreach ($activeOptions as $option)
+                                        <option value="{{ $option->id }}"
+                                            data-price="{{ showAmount($option->price) }}"
+                                            data-note="{{ e($option->availability_note ?? '') }}"
+                                            data-min="{{ $option->min_amount }}"
+                                            data-max="{{ $option->max_amount }}">
+                                            {{ __($option->name) }} - {{ showAmount($option->price) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="premium-cart-option-summary option-meta-box d-none">
+                                <span class="premium-cart-option-summary__price selected-price">{{ $product->catalogPriceLabel }}</span>
+                                <span class="premium-cart-option-summary__meta option-range-text d-none">
+                                    @lang('Range') <span class="selected-range"></span>
+                                </span>
+                                <span class="premium-cart-option-summary__meta option-note-text d-none">
+                                    <span class="selected-note"></span>
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($product->product_type === \App\Constants\Status::PRODUCT_TYPE_OPTION_REQUEST)
+                            <div class="requested-amount-group d-none mb-2">
+                                <input type="number" step="any" min="0" name="requested_amount"
+                                    class="form-control form-control-sm requested-amount-input"
+                                    value="{{ old('requested_amount') }}"
+                                    placeholder="@lang('Requested amount')">
+                            </div>
+                        @endif
+
+                        <div class="premium-cart-row">
+                            <div class="premium-qty-selector" data-cart-qty-wrapper>
+                                <button type="button" class="premium-qty-selector__btn" data-quantity-control="decrease" aria-label="@lang('Decrease quantity')">
+                                    <i class="las la-minus"></i>
+                                </button>
+                                <input type="number" min="1" max="99" name="quantity"
+                                    class="premium-qty-selector__input"
+                                    value="{{ $initialQuantity }}"
+                                    data-cart-quantity-input>
+                                <button type="button" class="premium-qty-selector__btn" data-quantity-control="increase" aria-label="@lang('Increase quantity')">
+                                    <i class="las la-plus"></i>
+                                </button>
+                            </div>
+
+                            <button type="submit" class="premium-cart-submit" data-cart-submit>
+                                <span class="premium-cart-submit__state premium-cart-submit__state--default">
+                                    <i class="las la-shopping-bag"></i>
+                                    <span data-cart-submit-text>{{ __($existingCartItem ? 'Update Cart' : 'Add to Cart') }}</span>
+                                </span>
+                                <span class="premium-cart-submit__state premium-cart-submit__state--loading">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span data-cart-submit-loading>{{ __('Adding...') }}</span>
+                                </span>
+                                <span class="premium-cart-submit__state premium-cart-submit__state--success">
+                                    <i class="las la-check-circle"></i>
+                                    <span>@lang('Added!')</span>
+                                </span>
+                            </button>
+                        </div>
+                    </form>
                 @else
                     <a href="{{ route('product.details', $product->slug) }}" class="btn btn-outline--base btn--sm mt-1">
                         @lang('View Details')
