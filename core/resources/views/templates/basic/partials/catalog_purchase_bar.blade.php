@@ -24,7 +24,7 @@
                     @endif
                 </h4>
                 <p class="mb-0 text-muted small">
-                    @lang($isOrderProduct ? 'Choose your option and quantity, then add to cart or buy now.' : 'Secure cart and checkout flow')
+                    @lang($isOrderProduct ? 'Choose your option and quantity, then add to cart.' : 'Secure cart and checkout flow')
                 </p>
             </div>
             <span class="badge badge--{{ $availabilityClass }}">{{ __(ucfirst($product->availability_status)) }}</span>
@@ -106,33 +106,19 @@
                 </div>
             </div>
 
-            <div class="catalog-cart-actions">
+            <div class="catalog-cart-actions catalog-cart-actions--single">
                 <button type="submit"
                     class="catalog-action-btn catalog-action-btn--primary"
                     data-cart-submit
                     data-cart-intent="cart"
-                    data-idle-label="{{ __('Add to Cart') }}"
+                    data-idle-label="{{ __('Cart') }}"
                     data-loading-label="{{ __('Adding...') }}"
                     data-success-label="{{ __('Added!') }}">
                     <span class="catalog-action-btn__icon" data-cart-submit-icon>
                         <i class="las la-shopping-cart"></i>
                     </span>
                     <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
-                    <span data-cart-submit-text>{{ __('Add to Cart') }}</span>
-                </button>
-
-                <button type="submit"
-                    class="catalog-action-btn catalog-action-btn--secondary"
-                    data-cart-submit
-                    data-cart-intent="checkout"
-                    data-idle-label="{{ __('Buy Now') }}"
-                    data-loading-label="{{ __('Processing...') }}"
-                    data-success-label="{{ __('Redirecting...') }}">
-                    <span class="catalog-action-btn__icon" data-cart-submit-icon>
-                        <i class="las la-bolt"></i>
-                    </span>
-                    <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
-                    <span data-cart-submit-text>{{ __('Buy Now') }}</span>
+                    <span data-cart-submit-text>{{ __('Cart') }}</span>
                 </button>
             </div>
         </form>

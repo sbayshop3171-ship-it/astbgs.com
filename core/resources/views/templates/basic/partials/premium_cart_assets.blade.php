@@ -40,8 +40,10 @@
         }
 
         .header-nav-actions {
-            width: 100%;
+            width: auto;
             max-width: 100%;
+            margin-left: auto;
+            flex: 0 0 auto;
             justify-content: flex-end;
         }
 
@@ -186,11 +188,11 @@
             position: relative;
             z-index: 1;
             max-height: none;
-            aspect-ratio: 43 / 23;
-            border-radius: 16px;
+            aspect-ratio: 4 / 3;
+            border-radius: 14px;
             overflow: hidden;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+            border: 0;
+            background: transparent;
         }
 
         .product-card__thumb::before {
@@ -202,13 +204,14 @@
             height: 100%;
             display: grid;
             place-items: center;
-            padding: clamp(10px, 1.2vw, 14px);
+            padding: 0;
         }
 
         .product-card__thumb img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            display: block;
+            object-fit: cover;
             object-position: center;
             transition: transform .22s ease, filter .22s ease;
         }
@@ -384,6 +387,10 @@
             gap: 12px;
         }
 
+        .catalog-cart-actions--single {
+            grid-template-columns: 1fr;
+        }
+
         .catalog-action-btn {
             position: relative;
             min-height: 48px;
@@ -507,6 +514,11 @@
             width: 100%;
         }
 
+        .catalog-view-btn {
+            min-height: 52px;
+            font-size: .94rem;
+        }
+
         .catalog-action-btn__spinner {
             display: none;
             width: 1rem;
@@ -537,6 +549,32 @@
             background: #166534;
             border-color: #166534;
             color: #fff;
+        }
+
+        @media (min-width: 992px) {
+            .header-navbar-collapse {
+                display: flex !important;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 14px 24px;
+            }
+
+            .header .nav-menu {
+                flex: 1 1 auto;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px 24px;
+                min-width: 0;
+            }
+
+            .header .nav-menu .nav-item {
+                flex: 0 0 auto;
+            }
+
+            .header .nav-menu .nav-link {
+                padding: 10px 0;
+                white-space: nowrap;
+            }
         }
 
         @media (min-width: 425px) {

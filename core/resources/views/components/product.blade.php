@@ -122,39 +122,25 @@
                                     <i class="las la-plus"></i>
                                 </button>
                             </div>
-                            <div class="catalog-cart-actions catalog-card-actions">
+                            <div class="catalog-cart-actions catalog-card-actions catalog-cart-actions--single">
                                 <button type="submit"
                                     class="catalog-action-btn catalog-action-btn--primary"
                                     data-cart-submit
                                     data-cart-intent="cart"
-                                    data-idle-label="{{ __('Add to Cart') }}"
+                                    data-idle-label="{{ __('Cart') }}"
                                     data-loading-label="{{ __('Adding...') }}"
                                     data-success-label="{{ __('Added!') }}">
                                     <span class="catalog-action-btn__icon" data-cart-submit-icon>
                                         <i class="las la-shopping-cart"></i>
                                     </span>
                                     <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                    <span data-cart-submit-text>{{ __('Add to Cart') }}</span>
-                                </button>
-
-                                <button type="submit"
-                                    class="catalog-action-btn catalog-action-btn--secondary"
-                                    data-cart-submit
-                                    data-cart-intent="checkout"
-                                    data-idle-label="{{ __('Buy Now') }}"
-                                    data-loading-label="{{ __('Processing...') }}"
-                                    data-success-label="{{ __('Redirecting...') }}">
-                                    <span class="catalog-action-btn__icon" data-cart-submit-icon>
-                                        <i class="las la-bolt"></i>
-                                    </span>
-                                    <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                    <span data-cart-submit-text>{{ __('Buy Now') }}</span>
+                                    <span data-cart-submit-text>{{ __('Cart') }}</span>
                                 </button>
                             </div>
                         </div>
                     </form>
                 @else
-                    <a href="{{ route('product.details', $product->slug) }}" class="catalog-action-btn catalog-action-btn--secondary catalog-action-btn--block">
+                    <a href="{{ route('product.details', $product->slug) }}" class="catalog-action-btn catalog-action-btn--secondary catalog-action-btn--block catalog-view-btn">
                         @lang('View Details')
                     </a>
                 @endif
@@ -166,7 +152,7 @@
                 @endif
 
                 @if ($product->managed_by_admin)
-                    <a href="{{ route('product.details', $product->slug) }}" class="catalog-action-btn catalog-action-btn--light catalog-action-btn--block">@lang('View Details')</a>
+                    <a href="{{ route('product.details', $product->slug) }}" class="catalog-action-btn catalog-action-btn--light catalog-action-btn--block catalog-view-btn">@lang('View Details')</a>
                 @endif
             </div>
         </div>

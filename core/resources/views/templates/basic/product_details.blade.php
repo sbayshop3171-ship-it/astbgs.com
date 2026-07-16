@@ -78,7 +78,6 @@
 
         .product-details__thumb,
         .order-product-page .common-sidebar__item,
-        .order-product-gallery-card,
         .order-product-copy-card {
             background: #fff;
             border: 1px solid rgba(15, 23, 42, 0.08);
@@ -88,25 +87,31 @@
 
         .product-details__thumb {
             overflow: hidden;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
         }
 
         .product-details__thumb>img {
             display: block;
             width: 100%;
-            aspect-ratio: 16 / 10;
-            object-fit: contain;
+            height: auto;
+            aspect-ratio: auto;
+            object-fit: cover;
             object-position: center;
-            padding: clamp(14px, 2vw, 20px);
-            background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
-            border-radius: 18px 18px 0 0;
+            padding: 0;
+            background: transparent;
+            border-radius: 18px;
         }
 
         .product-details__buttons {
             padding: clamp(16px, 2vw, 24px);
-            border-top: 1px solid rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-top: 0;
             background: transparent;
             gap: 14px;
             flex-wrap: wrap;
+            border-radius: 0 0 20px 20px;
         }
 
         .product-details__buttons .btn {
@@ -143,29 +148,35 @@
         }
 
         .order-product-page .common-sidebar__item,
-        .order-product-gallery-card,
         .order-product-copy-card {
             padding: clamp(18px, 2.2vw, 24px);
             box-shadow: none;
         }
 
+        .order-product-gallery-card {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+
         .order-product-main-image {
-            display: grid;
-            place-items: center;
-            min-height: clamp(280px, 42vw, 520px);
-            aspect-ratio: 16 / 11;
-            padding: clamp(12px, 2vw, 18px);
+            display: block;
+            min-height: 0;
+            aspect-ratio: auto;
+            padding: 0;
             border-radius: 18px;
             overflow: hidden;
-            background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
-            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: transparent;
+            border: 0;
         }
 
         .order-product-main-image img {
             width: 100%;
-            height: 100%;
+            height: auto;
             max-height: none;
-            object-fit: contain;
+            object-fit: cover;
             object-position: center;
             display: block;
         }
@@ -282,10 +293,6 @@
                 width: 100%;
                 justify-content: flex-start;
             }
-
-            .order-product-main-image {
-                min-height: clamp(240px, 58vw, 420px);
-            }
         }
 
         @media (max-width: 767px) {
@@ -294,19 +301,13 @@
                 gap: 18px;
             }
 
-            .order-product-gallery-card,
             .order-product-copy-card {
                 padding: 16px;
                 border-radius: 14px;
             }
 
-            .product-details__thumb>img,
-            .order-product-main-image {
-                aspect-ratio: 4 / 3;
-            }
-
             .product-details__thumb>img {
-                padding: 12px;
+                border-radius: 14px;
             }
 
             .product-details__buttons {
@@ -336,23 +337,17 @@
                 padding: 8px;
                 border-radius: 12px;
             }
-
-            .order-product-main-image {
-                min-height: clamp(220px, 78vw, 340px);
-            }
         }
 
         @media (max-width: 424px) {
-            .product-details__thumb,
             .order-product-page .common-sidebar__item,
-            .order-product-gallery-card,
             .order-product-copy-card,
             .order-product-main-image {
                 border-radius: 16px;
             }
 
             .product-details__thumb>img {
-                border-radius: 14px 14px 0 0;
+                border-radius: 12px;
             }
 
             .product-details__buttons {
