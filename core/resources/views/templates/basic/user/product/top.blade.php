@@ -26,17 +26,17 @@
     @endif
 
     @if ($isOrderProduct)
-        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap order-product-topbar">
             <div>
                 <h5 class="product-details__title mb-2">{{ __($product->title) }}</h5>
-                <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2 order-product-badges">
                     <span class="badge badge--dark">@lang('Type'): {{ __($product->productTypeLabel) }}</span>
                     <span class="badge badge--secondary">@lang('Category'): {{ __($product->category?->name) }}</span>
                     <span class="badge badge--secondary">@lang('Subcategory'): {{ __($product->subcategory?->name) }}</span>
                     <span class="badge badge--success">@lang('Available'): {{ __(ucfirst($product->availability_status ?? 'available')) }}</span>
                 </div>
             </div>
-            <div class="product-details-top__right flex-align">
+            <div class="product-details-top__right flex-align order-product-topbar__share">
                 @include('Template::user.product.social_share')
             </div>
         </div>

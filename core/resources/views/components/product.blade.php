@@ -154,14 +154,14 @@
                         </div>
                     </form>
                 @else
-                    <a href="{{ route('product.details', $product->slug) }}" class="btn btn-outline--base btn--sm mt-1">
+                    <a href="{{ route('product.details', $product->slug) }}" class="catalog-action-btn catalog-action-btn--secondary catalog-action-btn--block">
                         @lang('View Details')
                     </a>
                 @endif
 
                 @if (!$isOrderProduct)
                     @php $hasDemo = !empty($product->demo_url); @endphp
-                    <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
+                    <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="catalog-action-btn catalog-action-btn--light catalog-action-btn--block {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
                     </a>
                 @endif
 

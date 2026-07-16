@@ -143,7 +143,7 @@
 
         @auth
             <div class="common-sidebar__button mt-2">
-                <a href="{{ route('user.orders.index') }}" class="btn btn-outline--light w-100">@lang('My Orders')</a>
+                <a href="{{ route('user.orders.index') }}" class="catalog-action-btn catalog-action-btn--light catalog-action-btn--block">@lang('My Orders')</a>
             </div>
         @else
             <p class="small text-muted mt-3 mb-0">@lang('You can add items to cart now and sign in at checkout.')</p>

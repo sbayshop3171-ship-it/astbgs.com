@@ -36,7 +36,7 @@
                     </div>
                 @endif
 
-                <div class="flex-align gap-2">
+                <div class="flex-align gap-2 header-utility-actions">
                     <a href="{{ route('cart.index') }}" class="header-cart-link" aria-label="@lang('Shopping cart')" title="@lang('Shopping cart')">
                         <span class="header-cart-link__icon">
                             <i class="las la-shopping-bag"></i>
@@ -59,7 +59,7 @@
                         @endphp
 
                         @if ($user->status == Status::USER_ACTIVE)
-                            <div class="profile-info">
+                            <div class="profile-info header-profile-info">
                                 <button type="button" class="profile-info__button flex-align">
                                     <span class="profile-info__icon">
                                         <img src="{{ asset('assets/images/user/' . $user->avatar ?? null) }}" alt="{{ $user->username }}'s avatar" class="profile-info__avatar">

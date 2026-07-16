@@ -29,7 +29,7 @@
                 <span id="hiddenNav"><i class="las la-bars"></i></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="collapse navbar-collapse header-navbar-collapse" id="navbarSupportedContent">
 
                 <ul class="navbar-nav nav-menu me-auto align-items-lg-center">
                     <li class="nav-item">
@@ -58,19 +58,19 @@
                         </li>
                     @endforeach
                 </ul>
-                <div class="d-flex align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center flex-wrap gap-2 header-nav-actions">
                     @auth
                         <a href="{{ route('user.transactions', ['balance_type' => \App\Constants\Status::BALANCE_TYPE_WALLET]) }}"
-                            class="btn btn--sm btn-outline--base px-3">
+                            class="btn btn--sm btn-outline--base px-3 header-nav-actions__btn">
                             <i class="las la-wallet"></i>
                             @lang('Wallet')
                             <span class="ms-1">{{ showAmount(auth()->user()->wallet_balance ?? 0) }}</span>
                         </a>
-                        <a href="{{ route('user.deposit.index') }}" class="btn btn--sm btn-outline--light px-3">
+                        <a href="{{ route('user.deposit.index') }}" class="btn btn--sm btn-outline--light px-3 header-nav-actions__btn">
                             <i class="las la-plus-circle"></i> @lang('Add Money')
                         </a>
                     @endauth
-                    <a href="{{ route('plans') }}" class="btn btn--sm btn--base px-2">
+                    <a href="{{ route('plans') }}" class="btn btn--sm btn--base px-2 header-nav-actions__btn">
                         <i class="las la-plus-circle"></i> @lang('Membership Plan')
                     </a>
                 </div>

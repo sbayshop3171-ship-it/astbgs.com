@@ -1,4 +1,4 @@
-<div class="col-lg-4 ps-xxl-5">
+<div class="col-lg-4 ps-xxl-5 product-detail-sidebar-col">
     @php $isOrderProduct = $product->isAdminOrderProduct(); @endphp
     <div class="common-sidebar">
         @if ($product->managed_by_admin)
