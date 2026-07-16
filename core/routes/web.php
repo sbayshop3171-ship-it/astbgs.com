@@ -34,14 +34,33 @@ Route::get('health', function (HealthCheckService $healthCheckService): JsonResp
     }
 })->name('health');
 
+Route::get('brand-assets/{filename}', function (string $filename) {
+    $allowedFiles = ['logo.png', 'logo_dark.png', 'favicon.png'];
+
+    abort_unless(in_array($filename, $allowedFiles, true), 404);
+
+    $storedPath = brandAssetStoragePath($filename);
+    $publicPath = public_path(brandAssetPublicPath($filename));
+    $path       = is_file($storedPath) ? $storedPath : $publicPath;
+
+    abort_unless(is_file($path), 404);
+
+    return response()->file($path, [
+        'Cache-Control' => 'public, max-age=86400',
+        'Content-Type'  => mime_content_type($path) ?: 'image/png',
+    ]);
+})->where('filename', 'logo(?:_dark)?\.png|favicon\.png')->name('brand.asset');
+
 Route::get('favicon.ico', function () {
-    $icon = public_path('assets/images/logo_icon/favicon.png');
+    $storedIcon = brandAssetStoragePath('favicon.png');
+    $publicIcon = public_path(brandAssetPublicPath('favicon.png'));
+    $icon       = is_file($storedIcon) ? $storedIcon : $publicIcon;
 
     abort_unless(is_file($icon), 404);
 
     return response()->file($icon, [
         'Cache-Control' => 'public, max-age=86400',
-        'Content-Type' => 'image/png',
+        'Content-Type'  => mime_content_type($icon) ?: 'image/png',
     ]);
 });
 

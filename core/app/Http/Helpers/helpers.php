@@ -68,22 +68,72 @@ function activeTemplateName() {
     return $template;
 }
 
-function versionedBrandAsset(string $relativePath) {
-    $absolutePath = public_path(ltrim($relativePath, '/'));
+function brandAssetStoragePath(string $filename) {
+    return storage_path('app/brand_assets/' . ltrim($filename, '/'));
+}
 
-    if (is_file($absolutePath)) {
-        return asset($relativePath) . '?v=' . filemtime($absolutePath);
+function brandAssetPublicPath(string $filename) {
+    return getFilePath('logoIcon') . '/' . ltrim($filename, '/');
+}
+
+function persistBrandAssetCopy(string $filename) {
+    $storedPath = brandAssetStoragePath($filename);
+
+    if (is_file($storedPath)) {
+        return $storedPath;
     }
 
-    return getImage($relativePath);
+    $publicPath = public_path(brandAssetPublicPath($filename));
+
+    if (!is_file($publicPath)) {
+        return null;
+    }
+
+    $directory = dirname($storedPath);
+
+    if (!is_dir($directory)) {
+        mkdir($directory, 0755, true);
+    }
+
+    if (@copy($publicPath, $storedPath) && is_file($storedPath)) {
+        return $storedPath;
+    }
+
+    return null;
+}
+
+function versionedBrandAsset(string|array $relativePaths, string|array|null $storedFilenames = null) {
+    $relativePaths    = is_array($relativePaths) ? $relativePaths : [$relativePaths];
+    $storedFilenames  = $storedFilenames === null ? $relativePaths : (is_array($storedFilenames) ? $storedFilenames : [$storedFilenames]);
+
+    foreach ($storedFilenames as $storedFilename) {
+        $storedPath = persistBrandAssetCopy($storedFilename) ?: brandAssetStoragePath($storedFilename);
+
+        if (is_file($storedPath)) {
+            return route('brand.asset', ['filename' => $storedFilename]) . '?v=' . filemtime($storedPath);
+        }
+    }
+
+    foreach ($relativePaths as $relativePath) {
+        $absolutePath = public_path(ltrim($relativePath, '/'));
+
+        if (is_file($absolutePath)) {
+            return asset($relativePath) . '?v=' . filemtime($absolutePath);
+        }
+    }
+
+    return getImage($relativePaths[0]);
 }
 
 function siteLogo($type = null) {
-    $name = $type ? "/logo_$type.png" : '/logo.png';
-    return versionedBrandAsset(getFilePath('logoIcon') . $name);
+    $filenames = $type ? ["logo_$type.png", 'logo.png'] : ['logo.png', 'logo_dark.png'];
+    $paths     = array_map(fn($filename) => brandAssetPublicPath($filename), $filenames);
+
+    return versionedBrandAsset($paths, $filenames);
 }
+
 function siteFavicon() {
-    return versionedBrandAsset(getFilePath('logoIcon') . '/favicon.png');
+    return versionedBrandAsset(brandAssetPublicPath('favicon.png'), 'favicon.png');
 }
 
 function loadReCaptcha() {

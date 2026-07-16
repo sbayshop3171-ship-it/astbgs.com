@@ -151,9 +151,11 @@ class GeneralSettingController extends Controller
 
     protected function storeBrandImage($file, string $filename, ?string $size = null): void
     {
-        $path = public_path(getFilePath('logoIcon'));
+        $publicPath  = public_path(getFilePath('logoIcon'));
+        $storagePath = dirname(brandAssetStoragePath($filename));
         $fileManager = new FileManager();
-        $fileManager->makeDirectory($path);
+        $fileManager->makeDirectory($publicPath);
+        $fileManager->makeDirectory($storagePath);
 
         $manager = new ImageManager(new Driver());
         $image   = $manager->read($file);
@@ -163,7 +165,8 @@ class GeneralSettingController extends Controller
             $image->resize((int) $width, (int) $height);
         }
 
-        $image->save($path . DIRECTORY_SEPARATOR . $filename);
+        $image->save(brandAssetStoragePath($filename));
+        $image->save($publicPath . DIRECTORY_SEPARATOR . $filename);
     }
 
 

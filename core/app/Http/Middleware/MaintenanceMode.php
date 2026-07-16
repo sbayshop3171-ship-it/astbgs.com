@@ -9,6 +9,10 @@ class MaintenanceMode
 {
     public function handle($request, Closure $next)
     {
+        if ($request->is('brand-assets/*') || $request->is('favicon.ico') || $request->routeIs('maintenance')) {
+            return $next($request);
+        }
+
         if (gs('maintenance_mode') == Status::ENABLE) {
 
             if ($request->is('api/*')) {
