@@ -121,7 +121,7 @@ class GeneralSettingController extends Controller
         if ($request->hasFile('logo')) {
             try {
                 $this->storeBrandImage($request->file('logo'), 'logo.png');
-            } catch (\Exception $exp) {
+            } catch (\Throwable $exp) {
                 $notify[] = ['error', 'Couldn\'t upload the logo'];
                 return back()->withNotify($notify);
             }
@@ -130,7 +130,7 @@ class GeneralSettingController extends Controller
         if ($request->hasFile('logo_dark')) {
             try {
                 $this->storeBrandImage($request->file('logo_dark'), 'logo_dark.png');
-            } catch (\Exception $exp) {
+            } catch (\Throwable $exp) {
                 $notify[] = ['error', 'Couldn\'t upload the logo'];
                 return back()->withNotify($notify);
             }
@@ -139,7 +139,7 @@ class GeneralSettingController extends Controller
         if ($request->hasFile('favicon')) {
             try {
                 $this->storeBrandImage($request->file('favicon'), 'favicon.png', getFileSize('favicon'));
-            } catch (\Exception $exp) {
+            } catch (\Throwable $exp) {
                 $notify[] = ['error', 'Couldn\'t upload the favicon'];
                 return back()->withNotify($notify);
             }
@@ -152,7 +152,8 @@ class GeneralSettingController extends Controller
     protected function storeBrandImage($file, string $filename, ?string $size = null): void
     {
         $path = public_path(getFilePath('logoIcon'));
-        FileManager::makeDirectory($path);
+        $fileManager = new FileManager();
+        $fileManager->makeDirectory($path);
 
         $manager = new ImageManager(new Driver());
         $image   = $manager->read($file);
