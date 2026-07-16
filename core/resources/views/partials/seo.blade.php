@@ -7,7 +7,7 @@
     <meta name="title" Content="{{ gs()->siteName(__($pageTitle)) }}">
     <meta name="description" content="{{ isset($seoContents->description) && $seoContents->description ? $seoContents->description : $seo->description }}">
     <meta name="keywords" content="{{ implode(',', ((isset($seoContents->keywords) && $seoContents->keywords) ? $seoContents->keywords : $seo->keywords)) }}">
-    <link rel="shortcut icon" href="{{ siteFavicon() }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ siteFavicon() }}" type="image/png">
     <link rel="canonical" href="{{ url()->current() }}" />
     @if ((isset($seoContents->meta_robots) && $seoContents->meta_robots) || (isset($seo->meta_robots) && $seo->meta_robots))
         <meta name="robots" content="{{ isset($seoContents->meta_robots) && $seoContents->meta_robots ? $seoContents->meta_robots : $seo->meta_robots }}" />

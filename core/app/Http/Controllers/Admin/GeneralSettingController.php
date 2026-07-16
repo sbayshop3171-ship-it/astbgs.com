@@ -7,10 +7,15 @@ use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Models\Frontend;
 use App\Rules\FileTypeValidate;
+use App\Lib\FileManager;
 use Illuminate\Http\Request;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class GeneralSettingController extends Controller
 {
+    protected array $brandImageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+
     public function systemSetting()
     {
         $pageTitle = 'System Settings';
@@ -108,15 +113,14 @@ class GeneralSettingController extends Controller
     public function logoIconUpdate(Request $request)
     {
         $request->validate([
-            'logo'    => ['image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
-            'logo_dark'  => ['image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
-            'favicon' => ['image', new FileTypeValidate(['png'])],
+            'logo'      => ['nullable', 'image', new FileTypeValidate($this->brandImageExtensions)],
+            'logo_dark' => ['nullable', 'image', new FileTypeValidate($this->brandImageExtensions)],
+            'favicon'   => ['nullable', 'image', new FileTypeValidate($this->brandImageExtensions)],
         ]);
 
-        $path = getFilePath('logoIcon');
         if ($request->hasFile('logo')) {
             try {
-                fileUploader($request->logo, $path, filename: 'logo.png');
+                $this->storeBrandImage($request->file('logo'), 'logo.png');
             } catch (\Exception $exp) {
                 $notify[] = ['error', 'Couldn\'t upload the logo'];
                 return back()->withNotify($notify);
@@ -125,7 +129,7 @@ class GeneralSettingController extends Controller
 
         if ($request->hasFile('logo_dark')) {
             try {
-                fileUploader($request->logo_dark, $path, filename: 'logo_dark.png');
+                $this->storeBrandImage($request->file('logo_dark'), 'logo_dark.png');
             } catch (\Exception $exp) {
                 $notify[] = ['error', 'Couldn\'t upload the logo'];
                 return back()->withNotify($notify);
@@ -134,7 +138,7 @@ class GeneralSettingController extends Controller
 
         if ($request->hasFile('favicon')) {
             try {
-                fileUploader($request->favicon, $path, filename: 'favicon.png');
+                $this->storeBrandImage($request->file('favicon'), 'favicon.png', getFileSize('favicon'));
             } catch (\Exception $exp) {
                 $notify[] = ['error', 'Couldn\'t upload the favicon'];
                 return back()->withNotify($notify);
@@ -143,6 +147,22 @@ class GeneralSettingController extends Controller
         RequiredConfig::configured('logo_favicon');
         $notify[] = ['success', 'Logo & favicon updated successfully'];
         return back()->withNotify($notify);
+    }
+
+    protected function storeBrandImage($file, string $filename, ?string $size = null): void
+    {
+        $path = public_path(getFilePath('logoIcon'));
+        FileManager::makeDirectory($path);
+
+        $manager = new ImageManager(new Driver());
+        $image   = $manager->read($file);
+
+        if ($size) {
+            [$width, $height] = explode('x', strtolower($size));
+            $image->resize((int) $width, (int) $height);
+        }
+
+        $image->save($path . DIRECTORY_SEPARATOR . $filename);
     }
 
 
