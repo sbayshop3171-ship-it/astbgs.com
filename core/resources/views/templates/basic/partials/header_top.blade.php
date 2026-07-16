@@ -37,14 +37,11 @@
                 @endif
 
                 <div class="flex-align gap-2">
-                    <a href="{{ route('cart.index') }}" class="header-cart-chip" aria-label="@lang('Shopping cart')">
-                        <span class="header-cart-chip__icon">
+                    <a href="{{ route('cart.index') }}" class="header-cart-link" aria-label="@lang('Shopping cart')" title="@lang('Shopping cart')">
+                        <span class="header-cart-link__icon">
                             <i class="las la-shopping-bag"></i>
                         </span>
-                        <span class="header-cart-chip__content">
-                            <span class="header-cart-chip__label">@lang('Cart')</span>
-                            <span class="header-cart-chip__count" data-cart-count>{{ \App\Lib\CatalogCart::count() }}</span>
-                        </span>
+                        <span class="header-cart-link__badge" data-cart-count>{{ \App\Lib\CatalogCart::count() }}</span>
                     </a>
 
                     @guest

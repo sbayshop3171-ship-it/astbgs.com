@@ -62,11 +62,14 @@ class CartController extends Controller
 
         $notify[] = ['success', $product->hasActiveOptions() ? 'Product option added to cart' : 'Product added to cart'];
 
+        $redirectUrl = $request->redirect_to === 'checkout' ? route('cart.checkout') : null;
+
         if ($request->expectsJson()) {
             return response()->json($this->cartResponsePayload(
                 $notify[0][1],
                 $item,
-                $product->hasActiveOptions() ? 'Product option added to cart' : 'Product added to cart'
+                $product->hasActiveOptions() ? 'Product option added to cart' : 'Product added to cart',
+                $redirectUrl
             ));
         }
 
@@ -251,7 +254,7 @@ class CartController extends Controller
         return null;
     }
 
-    protected function cartResponsePayload(string $message, ?array $item = null, ?string $statusMessage = null): array
+    protected function cartResponsePayload(string $message, ?array $item = null, ?string $statusMessage = null, ?string $redirectUrl = null): array
     {
         return [
             'status'          => 'success',
@@ -260,6 +263,7 @@ class CartController extends Controller
             'cart_subtotal'   => showAmount(CatalogCart::subtotal()),
             'cart_url'        => route('cart.index'),
             'checkout_url'    => route('cart.checkout'),
+            'redirect_url'    => $redirectUrl,
             'item'            => $item ? [
                 'cart_key'          => $item['cart_key'],
                 'product_id'        => $item['product_id'],

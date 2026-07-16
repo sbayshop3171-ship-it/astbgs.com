@@ -2,8 +2,7 @@
     $isOrderProduct = $product->isAdminOrderProduct();
     $activeOptions = $product->relationLoaded('activeOptions') ? $product->activeOptions : $product->activeOptions()->get();
     $hasOptions = $activeOptions->isNotEmpty();
-    $existingCartItem = $product->managed_by_admin && !$hasOptions ? \App\Lib\CatalogCart::findForProduct($product->id) : null;
-    $initialQuantity = $existingCartItem['quantity'] ?? 1;
+    $initialQuantity = old('quantity', 1);
 @endphp
 <div class="product-card h-100">
     <div class="product-card__thumb">
@@ -68,20 +67,14 @@
                     <form action="{{ route('cart.add', $product->slug) }}" method="POST"
                         class="premium-cart-form premium-cart-form--card"
                         data-ajax-cart-form
-                        data-cart-default-label="{{ __($existingCartItem ? 'Update Cart' : 'Add to Cart') }}"
-                        data-cart-updated-label="{{ __('Update Cart') }}"
-                        data-cart-added-label="{{ __('Added!') }}"
-                        data-cart-key="{{ $existingCartItem['cart_key'] ?? '' }}"
-                        data-cart-item-url="{{ isset($existingCartItem['cart_key']) ? route('cart.item.sync', $existingCartItem['cart_key']) : '' }}"
                         data-cart-option-required="{{ $hasOptions ? 'true' : 'false' }}"
                         data-cart-price-placeholder="{{ $product->catalogPriceLabel }}"
-                        data-cart-label-pending="{{ __('Adding...') }}"
-                        data-cart-label-updating="{{ __('Updating...') }}">
+                        data-cart-price-empty-label="{{ __($hasOptions ? 'Select an option' : $product->catalogPriceLabel) }}">
                         @csrf
                         <input type="hidden" name="redirect_to" value="cart">
 
                         @if ($hasOptions)
-                            <div class="premium-cart-card__option mb-2">
+                            <div class="premium-cart-card__option">
                                 <select name="product_option_id" class="form-control form-control-sm catalog-option-select premium-cart-select" data-cart-option-select>
                                     <option value="">@lang('Select Option')</option>
                                     @foreach ($activeOptions as $option)
@@ -108,7 +101,7 @@
                         @endif
 
                         @if ($product->product_type === \App\Constants\Status::PRODUCT_TYPE_OPTION_REQUEST)
-                            <div class="requested-amount-group d-none mb-2">
+                            <div class="requested-amount-group d-none">
                                 <input type="number" step="any" min="0" name="requested_amount"
                                     class="form-control form-control-sm requested-amount-input"
                                     value="{{ old('requested_amount') }}"
@@ -129,21 +122,35 @@
                                     <i class="las la-plus"></i>
                                 </button>
                             </div>
+                            <div class="catalog-cart-actions catalog-card-actions">
+                                <button type="submit"
+                                    class="catalog-action-btn catalog-action-btn--primary"
+                                    data-cart-submit
+                                    data-cart-intent="cart"
+                                    data-idle-label="{{ __('Add to Cart') }}"
+                                    data-loading-label="{{ __('Adding...') }}"
+                                    data-success-label="{{ __('Added!') }}">
+                                    <span class="catalog-action-btn__icon" data-cart-submit-icon>
+                                        <i class="las la-shopping-cart"></i>
+                                    </span>
+                                    <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span data-cart-submit-text>{{ __('Add to Cart') }}</span>
+                                </button>
 
-                            <button type="submit" class="premium-cart-submit" data-cart-submit>
-                                <span class="premium-cart-submit__state premium-cart-submit__state--default">
-                                    <i class="las la-shopping-bag"></i>
-                                    <span data-cart-submit-text>{{ __($existingCartItem ? 'Update Cart' : 'Add to Cart') }}</span>
-                                </span>
-                                <span class="premium-cart-submit__state premium-cart-submit__state--loading">
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span data-cart-submit-loading>{{ __('Adding...') }}</span>
-                                </span>
-                                <span class="premium-cart-submit__state premium-cart-submit__state--success">
-                                    <i class="las la-check-circle"></i>
-                                    <span>@lang('Added!')</span>
-                                </span>
-                            </button>
+                                <button type="submit"
+                                    class="catalog-action-btn catalog-action-btn--secondary"
+                                    data-cart-submit
+                                    data-cart-intent="checkout"
+                                    data-idle-label="{{ __('Buy Now') }}"
+                                    data-loading-label="{{ __('Processing...') }}"
+                                    data-success-label="{{ __('Redirecting...') }}">
+                                    <span class="catalog-action-btn__icon" data-cart-submit-icon>
+                                        <i class="las la-bolt"></i>
+                                    </span>
+                                    <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span data-cart-submit-text>{{ __('Buy Now') }}</span>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 @else
@@ -156,8 +163,10 @@
                     @php $hasDemo = !empty($product->demo_url); @endphp
                     <a href="{{ $hasDemo ? $product->demo_url : 'javascript:void(0)' }}" class="btn btn-outline--light btn--sm {{ $hasDemo ? '' : 'disabled' }}" target="{{ $hasDemo ? '_blank' : '_self' }}"><i class="las la-external-link-alt"></i> @lang('Live Preview')
                     </a>
-                @elseif ($product->managed_by_admin)
-                    <a href="{{ route('product.details', $product->slug) }}" class="btn btn-outline--light btn--sm">@lang('View Details')</a>
+                @endif
+
+                @if ($product->managed_by_admin)
+                    <a href="{{ route('product.details', $product->slug) }}" class="catalog-action-btn catalog-action-btn--light catalog-action-btn--block">@lang('View Details')</a>
                 @endif
             </div>
         </div>

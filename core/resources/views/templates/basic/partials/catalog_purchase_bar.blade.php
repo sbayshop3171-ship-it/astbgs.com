@@ -3,9 +3,7 @@
     $hasOptions = $activeOptions->isNotEmpty();
     $hasPurchased = auth()->check() ? auth()->user()->hasPurchasedProduct($product->id) : false;
     $isOrderProduct = $product->isAdminOrderProduct();
-    $existingCartItem = !$hasOptions ? \App\Lib\CatalogCart::findForProduct($product->id) : null;
-    $initialQuantity = old('quantity', $existingCartItem['quantity'] ?? 1);
-    $defaultCartLabel = $existingCartItem ? 'Update Cart' : 'Add to Cart';
+    $initialQuantity = old('quantity', 1);
     $availabilityClasses = [
         \App\Constants\Status::PRODUCT_AVAILABILITY_AVAILABLE => 'success',
         \App\Constants\Status::PRODUCT_AVAILABILITY_LIMITED => 'warning',
@@ -26,7 +24,7 @@
                     @endif
                 </h4>
                 <p class="mb-0 text-muted small">
-                    @lang($isOrderProduct ? 'Simple service checkout for this product' : 'Secure cart and checkout flow')
+                    @lang($isOrderProduct ? 'Choose your option and quantity, then add to cart or buy now.' : 'Secure cart and checkout flow')
                 </p>
             </div>
             <span class="badge badge--{{ $availabilityClass }}">{{ __(ucfirst($product->availability_status)) }}</span>
@@ -48,16 +46,9 @@
             id="catalog-purchase-form-{{ $product->id }}"
             class="premium-cart-form premium-cart-form--sidebar"
             data-ajax-cart-form
-            data-cart-default-label="{{ __($defaultCartLabel) }}"
-            data-cart-updated-label="{{ __('Update Cart') }}"
-            data-cart-added-label="{{ __('Added!') }}"
-            data-cart-key="{{ $existingCartItem['cart_key'] ?? '' }}"
-            data-cart-item-url="{{ isset($existingCartItem['cart_key']) ? route('cart.item.sync', $existingCartItem['cart_key']) : '' }}"
             data-cart-option-required="{{ $hasOptions ? 'true' : 'false' }}"
-            data-cart-price-placeholder="{{ __($isOrderProduct && $hasOptions ? 'Select an option' : $product->catalogPriceLabel) }}"
-            data-sticky-price-target="#catalog-sticky-price-{{ $product->id }}"
-            data-cart-label-pending="{{ __('Adding...') }}"
-            data-cart-label-updating="{{ __('Updating...') }}">
+            data-cart-price-placeholder="{{ $product->catalogPriceLabel }}"
+            data-cart-price-empty-label="{{ __($isOrderProduct && $hasOptions ? 'Select an option to see price' : $product->catalogPriceLabel) }}">
             @csrf
             <input type="hidden" name="redirect_to" value="cart">
 
@@ -67,7 +58,8 @@
                     <select name="product_option_id" class="form-control catalog-option-select premium-cart-select" data-cart-option-select>
                         <option value="">@lang('Select One')</option>
                         @foreach ($activeOptions as $option)
-                            <option value="{{ $option->id }}" data-price="{{ showAmount($option->price) }}"
+                            <option value="{{ $option->id }}"
+                                data-price="{{ showAmount($option->price) }}"
                                 data-note="{{ e($option->availability_note ?? '') }}"
                                 data-min="{{ $option->min_amount }}"
                                 data-max="{{ $option->max_amount }}">
@@ -107,32 +99,46 @@
                     </button>
                     <input type="number" min="1" max="99" name="quantity" class="premium-qty-selector__input"
                         value="{{ $initialQuantity }}"
-                        data-cart-quantity-input
-                        data-cart-quantity-group="catalog-product-{{ $product->id }}">
+                        data-cart-quantity-input>
                     <button type="button" class="premium-qty-selector__btn" data-quantity-control="increase" aria-label="@lang('Increase quantity')">
                         <i class="las la-plus"></i>
                     </button>
                 </div>
             </div>
 
-            <button type="submit" class="premium-cart-submit premium-cart-submit--sidebar catalog-submit-button" data-cart-submit>
-                <span class="premium-cart-submit__state premium-cart-submit__state--default">
-                    <i class="las la-shopping-bag"></i>
-                    <span data-cart-submit-text>{{ __($defaultCartLabel) }}</span>
-                </span>
-                <span class="premium-cart-submit__state premium-cart-submit__state--loading">
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span data-cart-submit-loading>{{ __('Adding...') }}</span>
-                </span>
-                <span class="premium-cart-submit__state premium-cart-submit__state--success">
-                    <i class="las la-check-circle"></i>
-                    <span>@lang('Added!')</span>
-                </span>
-            </button>
+            <div class="catalog-cart-actions">
+                <button type="submit"
+                    class="catalog-action-btn catalog-action-btn--primary"
+                    data-cart-submit
+                    data-cart-intent="cart"
+                    data-idle-label="{{ __('Add to Cart') }}"
+                    data-loading-label="{{ __('Adding...') }}"
+                    data-success-label="{{ __('Added!') }}">
+                    <span class="catalog-action-btn__icon" data-cart-submit-icon>
+                        <i class="las la-shopping-cart"></i>
+                    </span>
+                    <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span data-cart-submit-text>{{ __('Add to Cart') }}</span>
+                </button>
+
+                <button type="submit"
+                    class="catalog-action-btn catalog-action-btn--secondary"
+                    data-cart-submit
+                    data-cart-intent="checkout"
+                    data-idle-label="{{ __('Buy Now') }}"
+                    data-loading-label="{{ __('Processing...') }}"
+                    data-success-label="{{ __('Redirecting...') }}">
+                    <span class="catalog-action-btn__icon" data-cart-submit-icon>
+                        <i class="las la-bolt"></i>
+                    </span>
+                    <span class="catalog-action-btn__spinner spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span data-cart-submit-text>{{ __('Buy Now') }}</span>
+                </button>
+            </div>
         </form>
 
         <div class="common-sidebar__button mt-3">
-            <a href="{{ route('cart.index') }}" class="btn btn-outline--base w-100">@lang('View Cart')</a>
+            <a href="{{ route('cart.index') }}" class="catalog-action-btn catalog-action-btn--light catalog-action-btn--block">@lang('View Cart')</a>
         </div>
 
         @auth
@@ -144,140 +150,3 @@
         @endauth
     </div>
 </div>
-
-<div class="catalog-sticky-cart d-lg-none" data-sticky-cart data-target-form="catalog-purchase-form-{{ $product->id }}">
-    <div class="catalog-sticky-cart__meta">
-        <span class="catalog-sticky-cart__label">@lang('Quick Cart')</span>
-        <strong class="catalog-sticky-cart__price" id="catalog-sticky-price-{{ $product->id }}">
-            @if ($isOrderProduct && $hasOptions)
-                @lang('Select an option')
-            @else
-                {{ $product->catalogPriceLabel }}
-            @endif
-        </strong>
-    </div>
-
-    <div class="catalog-sticky-cart__actions">
-        <div class="premium-qty-selector premium-qty-selector--sticky" data-cart-qty-wrapper>
-            <button type="button" class="premium-qty-selector__btn" data-quantity-control="decrease" aria-label="@lang('Decrease quantity')">
-                <i class="las la-minus"></i>
-            </button>
-            <input type="number" min="1" max="99" class="premium-qty-selector__input"
-                value="{{ $initialQuantity }}"
-                data-cart-quantity-input
-                data-cart-quantity-group="catalog-product-{{ $product->id }}">
-            <button type="button" class="premium-qty-selector__btn" data-quantity-control="increase" aria-label="@lang('Increase quantity')">
-                <i class="las la-plus"></i>
-            </button>
-        </div>
-
-        <button type="submit"
-            form="catalog-purchase-form-{{ $product->id }}"
-            class="premium-cart-submit premium-cart-submit--sticky"
-            data-cart-submit>
-            <span class="premium-cart-submit__state premium-cart-submit__state--default">
-                <i class="las la-shopping-bag"></i>
-                <span data-cart-submit-text>{{ __($defaultCartLabel) }}</span>
-            </span>
-            <span class="premium-cart-submit__state premium-cart-submit__state--loading">
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span data-cart-submit-loading>{{ __('Adding...') }}</span>
-            </span>
-            <span class="premium-cart-submit__state premium-cart-submit__state--success">
-                <i class="las la-check-circle"></i>
-                <span>@lang('Added!')</span>
-            </span>
-        </button>
-    </div>
-</div>
-
-@push('script')
-    <script>
-        (function($) {
-            "use strict";
-
-            const form = $('#catalog-purchase-form-{{ $product->id }}');
-            if (!form.length) {
-                return;
-            }
-
-            const optionSelect = form.find('.catalog-option-select');
-            const optionMetaBox = form.find('.option-meta-box');
-            const priceHeading = form.find('.catalog-price-heading');
-            const selectedPrice = form.find('.selected-price');
-            const selectedPricingType = form.find('.selected-pricing-type');
-            const optionRangeText = form.find('.option-range-text');
-            const selectedRange = form.find('.selected-range');
-            const optionNoteText = form.find('.option-note-text');
-            const selectedNote = form.find('.selected-note');
-            const requestedAmountGroup = form.find('.requested-amount-group');
-            const requestedAmountInput = form.find('.requested-amount-input');
-            const submitButton = form.find('.catalog-submit-button');
-            const stickyPrice = $('#catalog-sticky-price-{{ $product->id }}');
-
-            function toggleOptionDetails() {
-                if (!optionSelect.length) {
-                    return;
-                }
-
-                const option = optionSelect.find('option:selected');
-                const hasValue = !!option.val();
-                const price = option.data('price') || @json($product->catalogPriceLabel);
-                const min = option.data('min');
-                const max = option.data('max');
-                const note = option.data('note');
-                const hasRange = (min !== undefined && min !== '') || (max !== undefined && max !== '');
-                const minText = min !== undefined && min !== '' ? min : '0';
-                const maxText = max !== undefined && max !== '' ? max : 'Any';
-
-                optionMetaBox.toggleClass('d-none', !hasValue);
-                selectedPrice.text(price);
-                selectedPricingType.text(hasRange ? @json(__('Min-Max Range')) : @json(__('Fixed Price')));
-                if (stickyPrice.length) {
-                    stickyPrice.text(hasValue ? price : @json($isOrderProduct && $hasOptions ? __('Select an option') : $product->catalogPriceLabel));
-                }
-                @if ($isOrderProduct && $hasOptions)
-                if (priceHeading.length) {
-                    priceHeading.text(hasValue ? price : @json(__('Select an option to see price')));
-                }
-                @endif
-
-                form.attr('data-cart-option-required', hasValue ? 'false' : 'true');
-                submitButton.toggleClass('is-attention', !hasValue);
-
-                optionRangeText.toggleClass('d-none', !hasValue || !hasRange);
-                if (hasRange) {
-                    selectedRange.text(`${minText} - ${maxText}`);
-                }
-
-                optionNoteText.toggleClass('d-none', !hasValue || !note);
-                if (note) {
-                    selectedNote.text(note);
-                }
-
-                @if ($product->product_type === \App\Constants\Status::PRODUCT_TYPE_OPTION_REQUEST)
-                    requestedAmountGroup.toggleClass('d-none', !hasValue || !hasRange);
-                    if (hasRange) {
-                        requestedAmountInput.attr('placeholder', `${minText} - ${maxText}`);
-                        if (min !== undefined && min !== '') {
-                            requestedAmountInput.attr('min', min);
-                        } else {
-                            requestedAmountInput.removeAttr('min');
-                        }
-
-                        if (max !== undefined && max !== '') {
-                            requestedAmountInput.attr('max', max);
-                        } else {
-                            requestedAmountInput.removeAttr('max');
-                        }
-                    } else {
-                        requestedAmountInput.val('').removeAttr('min').removeAttr('max').attr('placeholder', @json(__('Fixed amount')));
-                    }
-                @endif
-            }
-
-            optionSelect.on('change', toggleOptionDetails);
-            toggleOptionDetails();
-        })(jQuery);
-    </script>
-@endpush
