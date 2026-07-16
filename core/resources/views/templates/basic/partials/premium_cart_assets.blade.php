@@ -188,7 +188,7 @@
             position: relative;
             z-index: 1;
             max-height: none;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 16 / 10;
             border-radius: 14px;
             overflow: hidden;
             border: 0;
@@ -211,7 +211,7 @@
             width: 100%;
             height: 100%;
             display: block;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center;
             transition: transform .22s ease, filter .22s ease;
         }
@@ -692,7 +692,7 @@
             }
 
             .product-card__thumb {
-                aspect-ratio: 4 / 3;
+                aspect-ratio: 16 / 10;
             }
 
             .product-card__thumb .link {
