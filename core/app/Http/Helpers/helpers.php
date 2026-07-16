@@ -68,12 +68,22 @@ function activeTemplateName() {
     return $template;
 }
 
+function versionedBrandAsset(string $relativePath) {
+    $absolutePath = public_path(ltrim($relativePath, '/'));
+
+    if (is_file($absolutePath)) {
+        return asset($relativePath) . '?v=' . filemtime($absolutePath);
+    }
+
+    return getImage($relativePath);
+}
+
 function siteLogo($type = null) {
     $name = $type ? "/logo_$type.png" : '/logo.png';
-    return getImage(getFilePath('logoIcon') . $name);
+    return versionedBrandAsset(getFilePath('logoIcon') . $name);
 }
 function siteFavicon() {
-    return getImage(getFilePath('logoIcon') . '/favicon.png');
+    return versionedBrandAsset(getFilePath('logoIcon') . '/favicon.png');
 }
 
 function loadReCaptcha() {

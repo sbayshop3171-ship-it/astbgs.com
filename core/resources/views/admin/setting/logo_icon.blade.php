@@ -16,15 +16,15 @@
                         <div class="row justify-content-center">
                             <div class="form-group col-md-4 col-sm-6">
                                 <label> @lang('Logo for White Background')</label>
-                                <x-image-uploader name="logo_dark" :imagePath="siteLogo('dark') . '?' . time()" :size="false" class="w-100" id="uploadLogo" accept=".png, .jpg, .jpeg, .webp, .gif, .bmp" :required="false" />
+                                <x-image-uploader name="logo_dark" :imagePath="siteLogo('dark')" :size="false" class="w-100" id="uploadLogo" accept=".png, .jpg, .jpeg, .webp, .gif, .bmp" :required="false" />
                             </div>
                             <div class="form-group col-md-4 col-sm-6">
                                 <label> @lang('Logo for Dark Background')</label>
-                                <x-image-uploader name="logo" :imagePath="siteLogo() . '?' . time()" :size="false" class="w-100" id="uploadLogoDark" accept=".png, .jpg, .jpeg, .webp, .gif, .bmp" :darkMode="true" :required="false" />
+                                <x-image-uploader name="logo" :imagePath="siteLogo()" :size="false" class="w-100" id="uploadLogoDark" accept=".png, .jpg, .jpeg, .webp, .gif, .bmp" :darkMode="true" :required="false" />
                             </div>
                             <div class="form-group col-md-4 col-sm-6">
                                 <label> @lang('Favicon')</label>
-                                <x-image-uploader name="favicon" :imagePath="siteFavicon() . '?' . time()" :size="false" class="w-100" id="uploadFavicon" accept=".png, .jpg, .jpeg, .webp, .gif, .bmp" :required="false" />
+                                <x-image-uploader name="favicon" :imagePath="siteFavicon()" :size="false" class="w-100" id="uploadFavicon" accept=".png, .jpg, .jpeg, .webp, .gif, .bmp" :required="false" />
                             </div>
                         </div>
                         <button type="submit" class="btn btn--primary w-100 h-45">@lang('Submit')</button>
