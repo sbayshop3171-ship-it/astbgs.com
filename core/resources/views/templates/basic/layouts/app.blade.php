@@ -36,6 +36,7 @@
 
     <div class="body-overlay"></div>
     <div class="sidebar-overlay"></div>
+    @include('Template::partials.whatsapp_support')
     <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>
 
     @yield('panel')

@@ -921,3 +921,44 @@ button .spinner-border {
     padding: 8px 0;
   }
 }
+
+.whatsapp-support {
+  position: fixed;
+  right: 30px;
+  bottom: 94px;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(37, 211, 102, 0.28);
+  z-index: 6;
+  font-size: 1.8rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.whatsapp-support:hover,
+.whatsapp-support:focus {
+  color: #fff;
+  background: #20bd5a;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(37, 211, 102, 0.34);
+}
+
+.whatsapp-support:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.18), 0 16px 32px rgba(37, 211, 102, 0.34);
+}
+
+@media (max-width: 575px) {
+  .whatsapp-support {
+    right: 18px;
+    bottom: 84px;
+    width: 52px;
+    height: 52px;
+    font-size: 1.65rem;
+  }
+}
