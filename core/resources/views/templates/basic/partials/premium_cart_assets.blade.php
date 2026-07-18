@@ -1,9 +1,17 @@
 @pushOnce('style')
     <style>
-        .wrapper-header,
         .product,
         .product-details {
             overflow-x: clip;
+        }
+
+        .wrapper-header,
+        .header-top,
+        .top-header__wrapper,
+        .header-top__right,
+        .header-utility-actions,
+        .header-profile-info {
+            overflow: visible;
         }
 
         .header-top__right,
@@ -81,6 +89,7 @@
         .header-profile-info {
             max-width: min(100%, 220px);
             flex-shrink: 1;
+            z-index: 10000;
         }
 
         .profile-info__button {
@@ -671,6 +680,44 @@
 
             .header-profile-info {
                 max-width: 100%;
+            }
+
+            .header-profile-info .profile-dropdown {
+                position: fixed;
+                top: 56px;
+                left: 12px;
+                right: 12px;
+                width: auto;
+                max-height: calc(100dvh - 86px);
+                margin-top: 0;
+                padding: 14px;
+                overflow: hidden;
+                border-radius: 10px;
+                box-shadow: 0 16px 36px rgba(15, 23, 42, .22);
+                transform: translateY(-8px) scale(.98);
+                transform-origin: top center;
+                z-index: 100000;
+            }
+
+            .header-profile-info .profile-dropdown.show {
+                transform: translateY(0) scale(1);
+            }
+
+            .header-profile-info .profile-dropdown::before {
+                display: none;
+            }
+
+            .header-profile-info .profile-dropdown-list {
+                max-height: calc(100dvh - 190px);
+                height: auto;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .header-profile-info .profile-dropdown-list__link {
+                min-height: 40px;
+                padding: 8px 10px;
+                border-radius: 8px;
             }
 
             .top-menu-list {
