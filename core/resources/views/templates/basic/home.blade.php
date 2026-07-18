@@ -256,16 +256,25 @@
             .home-mobile-shop .collection-list__button {
                 width: 30px;
                 height: 30px;
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
                 border-radius: 50%;
                 border: 1px solid hsl(var(--base) / .42);
                 background: rgba(255, 255, 255, .98);
                 color: hsl(var(--base)) !important;
+                line-height: 1;
+                text-align: center;
                 box-shadow: 0 8px 18px rgba(15, 23, 42, .2), 0 0 0 2px rgba(255, 255, 255, .72);
             }
 
             .home-mobile-shop .collection-list__button i,
             .home-mobile-shop .collection-list__button i::before {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
                 color: hsl(var(--base)) !important;
+                line-height: 1;
             }
 
             .home-mobile-shop .collection-list__button:hover,
