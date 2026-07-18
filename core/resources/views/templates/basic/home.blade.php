@@ -257,8 +257,35 @@
                 width: 30px;
                 height: 30px;
                 border-radius: 50%;
-                background: rgba(255, 255, 255, .94);
-                box-shadow: 0 6px 16px rgba(15, 23, 42, .12);
+                border: 1px solid hsl(var(--base) / .42);
+                background: rgba(255, 255, 255, .98);
+                color: hsl(var(--base)) !important;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, .2), 0 0 0 2px rgba(255, 255, 255, .72);
+            }
+
+            .home-mobile-shop .collection-list__button i,
+            .home-mobile-shop .collection-list__button i::before {
+                color: hsl(var(--base)) !important;
+            }
+
+            .home-mobile-shop .collection-list__button:hover,
+            .home-mobile-shop .collection-list__button:focus,
+            .home-mobile-shop .collection-list__button.wishlisted,
+            .home-mobile-shop .collection-list__button.collected {
+                border-color: hsl(var(--base));
+                background: hsl(var(--base));
+                color: #fff !important;
+            }
+
+            .home-mobile-shop .collection-list__button:hover i,
+            .home-mobile-shop .collection-list__button:hover i::before,
+            .home-mobile-shop .collection-list__button:focus i,
+            .home-mobile-shop .collection-list__button:focus i::before,
+            .home-mobile-shop .collection-list__button.wishlisted i,
+            .home-mobile-shop .collection-list__button.wishlisted i::before,
+            .home-mobile-shop .collection-list__button.collected i,
+            .home-mobile-shop .collection-list__button.collected i::before {
+                color: #fff !important;
             }
 
             .home-mobile-shop .home-product-grid .product-card__content {

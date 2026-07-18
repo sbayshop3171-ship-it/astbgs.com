@@ -1087,6 +1087,38 @@ button .spinner-border {
 }
 
 @media (max-width: 767px) {
+  .product-card .collection-list__button {
+    border: 1px solid hsl(var(--base) / .42);
+    background: rgba(255, 255, 255, .98);
+    color: hsl(var(--base)) !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .2), 0 0 0 2px rgba(255, 255, 255, .72);
+  }
+
+  .product-card .collection-list__button i,
+  .product-card .collection-list__button i::before {
+    color: hsl(var(--base)) !important;
+  }
+
+  .product-card .collection-list__button:hover,
+  .product-card .collection-list__button:focus,
+  .product-card .collection-list__button.wishlisted,
+  .product-card .collection-list__button.collected {
+    border-color: hsl(var(--base));
+    background: hsl(var(--base));
+    color: #fff !important;
+  }
+
+  .product-card .collection-list__button:hover i,
+  .product-card .collection-list__button:hover i::before,
+  .product-card .collection-list__button:focus i,
+  .product-card .collection-list__button:focus i::before,
+  .product-card .collection-list__button.wishlisted i,
+  .product-card .collection-list__button.wishlisted i::before,
+  .product-card .collection-list__button.collected i,
+  .product-card .collection-list__button.collected i::before {
+    color: #fff !important;
+  }
+
   .category .home-category-grid {
     --bs-gutter-x: 10px;
     --bs-gutter-y: 10px;
