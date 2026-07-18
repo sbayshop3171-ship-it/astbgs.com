@@ -147,13 +147,51 @@
 
 @media (max-width: 575px) {
   .cookies-card {
-    flex-direction: column;
+    left: 10px;
+    right: 10px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    width: auto;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px 10px;
+    padding: 10px;
+    border-radius: 12px;
+    text-align: left !important;
+  }
+
+  .cookies-card__icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1.2rem;
+  }
+
+  .cookies-card__desc {
+    margin: 0;
+    max-height: 58px;
+    overflow: hidden;
+    font-size: .74rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
   }
 
   .cookies-card__btn {
+    grid-column: 1 / -1;
     flex-direction: row;
-    align-items: flex-end;
-    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+    width: auto;
+  }
+
+  .cookies-card__btn .btn {
+    min-height: 32px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: .78rem;
   }
 }
 /* Cookies Card End */
