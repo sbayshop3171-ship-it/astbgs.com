@@ -479,13 +479,15 @@
             }
 
             function openMobileFilter() {
-                $('body').addClass('mobile-filter-open');
+                $('body').removeClass('toggle-sidebar scroll-hide-sm').addClass('mobile-filter-open');
+                $('.sidebar-overlay').removeClass('show');
                 $productSidebar.addClass('show');
                 $filterButton.attr('aria-expanded', 'true');
             }
 
             function closeMobileFilter() {
-                $('body').removeClass('mobile-filter-open');
+                $('body').removeClass('mobile-filter-open toggle-sidebar scroll-hide-sm');
+                $('.sidebar-overlay').removeClass('show');
                 $productSidebar.removeClass('show');
                 $filterButton.removeClass('filter_visible').attr('aria-expanded', 'false');
             }
@@ -504,7 +506,11 @@
 
             $filterButton.on('click', function() {
                 if (isMobileFilter()) {
-                    openMobileFilter();
+                    if ($('body').hasClass('mobile-filter-open')) {
+                        closeMobileFilter();
+                    } else {
+                        openMobileFilter();
+                    }
                     iconChange();
                     return;
                 }
