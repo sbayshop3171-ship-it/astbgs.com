@@ -904,11 +904,11 @@ button .spinner-border {
 
 @media (max-width: 991px) {
   .header-top {
-    padding: 12px 0;
+    padding: 10px 0;
   }
 
   .top-header__wrapper {
-    min-height: 44px;
+    min-height: 38px;
   }
 
   .wrapper-header .site-logo img,
@@ -970,6 +970,19 @@ button .spinner-border {
 @media (max-width: 575px) {
   body {
     padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .header-top {
+    padding: 8px 0;
+  }
+
+  .top-header__wrapper {
+    min-height: 32px;
+    gap: 10px;
+  }
+
+  .header {
+    padding: 6px 0;
   }
 
   .mobile-bottom-nav {

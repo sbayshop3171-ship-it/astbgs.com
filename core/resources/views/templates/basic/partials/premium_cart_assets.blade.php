@@ -645,50 +645,71 @@
         }
 
         @media (max-width: 575px) {
-            .header-top__right,
-            .header-utility-actions {
+            .header-top__right {
                 width: 100%;
+                flex-wrap: nowrap;
+                flex-direction: row-reverse;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                row-gap: 0;
             }
 
             .header-utility-actions {
-                justify-content: space-between;
+                width: auto;
+                flex: 1 1 auto;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                gap: 10px;
             }
 
             .language_switcher {
-                max-width: calc(100% - 72px);
+                max-width: 140px;
+                flex: 0 0 auto;
+                padding-block: 0;
             }
 
             .header-profile-info {
-                max-width: calc(100% - 58px);
+                max-width: 100%;
             }
 
             .top-menu-list {
-                width: 100%;
+                width: auto;
+                flex-wrap: nowrap;
                 justify-content: flex-start;
+                gap: 12px;
             }
 
-            .header-cart-link {
-                width: 40px;
-                height: 40px;
+            .top-menu-list__link {
+                font-size: .82rem;
+                line-height: 1.2;
             }
 
-            .header-cart-link__badge {
-                top: -5px;
-                right: -5px;
+            .header-top .header-cart-link {
+                display: none !important;
             }
         }
 
         @media (max-width: 424px) {
-            .header-nav-actions__btn,
-            .header-profile-info,
-            .language_switcher {
+            .header-nav-actions__btn {
                 width: 100%;
                 max-width: 100%;
             }
 
-            .header-utility-actions,
-            .top-menu-list {
-                justify-content: stretch;
+            .header-profile-info,
+            .language_switcher {
+                max-width: 100%;
+            }
+
+            .header-top .language_switcher {
+                width: auto;
+                max-width: 135px;
+            }
+
+            .header-top .header-utility-actions,
+            .header-top .top-menu-list {
+                width: auto;
+                justify-content: flex-start;
             }
 
             .product-card__thumb {
