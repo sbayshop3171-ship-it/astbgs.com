@@ -478,22 +478,39 @@
                 return window.innerWidth <= 991;
             }
 
-            function openMobileFilter() {
-                $('body').removeClass('toggle-sidebar scroll-hide-sm').addClass('mobile-filter-open');
+            function clearLegacyMobileSidebar() {
+                $('body').removeClass('toggle-sidebar scroll-hide-sm');
                 $('.sidebar-overlay').removeClass('show');
-                $productSidebar.addClass('show');
-                $filterButton.attr('aria-expanded', 'true');
             }
 
-            function closeMobileFilter() {
+            function openMobileFilter() {
+                clearLegacyMobileSidebar();
+                $('body').addClass('mobile-filter-open');
+                $productSidebar.addClass('show');
+                $filterButton.attr('aria-expanded', 'true');
+                setTimeout(function() {
+                    clearLegacyMobileSidebar();
+                    $('body').addClass('mobile-filter-open');
+                    $productSidebar.addClass('show');
+                }, 0);
+            }
+
+            function closeMobileFilter(deferCleanup = true) {
                 $('body').removeClass('mobile-filter-open toggle-sidebar scroll-hide-sm');
                 $('.sidebar-overlay').removeClass('show');
                 $productSidebar.removeClass('show');
                 $filterButton.removeClass('filter_visible').attr('aria-expanded', 'false');
+                if (deferCleanup) {
+                    setTimeout(function() {
+                        clearLegacyMobileSidebar();
+                        $('body').removeClass('mobile-filter-open');
+                        $productSidebar.removeClass('show');
+                    }, 0);
+                }
             }
 
             function toggleSidebar() {
-                closeMobileFilter();
+                closeMobileFilter(false);
                 const productFilterBtn = localStorage.getItem('product_filter_btn');
                 if (!isMobileFilter() && productFilterBtn == 'hidden') {
                     $('body').addClass('toggle-sidebar');
