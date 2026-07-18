@@ -956,9 +956,119 @@ button .spinner-border {
 @media (max-width: 575px) {
   .whatsapp-support {
     right: 18px;
-    bottom: 84px;
+    bottom: 150px;
     width: 52px;
     height: 52px;
     font-size: 1.65rem;
+  }
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 575px) {
+  body {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    min-height: calc(68px + env(safe-area-inset-bottom));
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, .96);
+    border-top: 1px solid rgba(15, 23, 42, .08);
+    box-shadow: 0 -12px 32px rgba(15, 23, 42, .12);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobile-bottom-nav__link {
+    min-width: 0;
+    min-height: 52px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #73748a;
+    text-decoration: none;
+    font-size: .68rem;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .mobile-bottom-nav__link:hover,
+  .mobile-bottom-nav__link:focus,
+  .mobile-bottom-nav__link.active {
+    color: hsl(var(--base));
+  }
+
+  .mobile-bottom-nav__icon {
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .mobile-bottom-nav__text {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-bottom-nav__link--cart {
+    transform: translateY(-10px);
+  }
+
+  .mobile-bottom-nav__cart {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: hsl(var(--base));
+    color: #fff;
+    box-shadow: 0 12px 24px hsl(var(--base) / .26);
+  }
+
+  .mobile-bottom-nav__link--cart .mobile-bottom-nav__icon {
+    font-size: 1.55rem;
+  }
+
+  .mobile-bottom-nav__link--cart .mobile-bottom-nav__text {
+    color: hsl(var(--base));
+  }
+
+  .mobile-bottom-nav__badge {
+    position: absolute;
+    top: 4px;
+    right: 3px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #111827;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: .62rem;
+    line-height: 1;
+  }
+
+  .scroll-top {
+    right: 18px;
+    bottom: 88px;
+    width: 48px;
+    height: 48px;
   }
 }

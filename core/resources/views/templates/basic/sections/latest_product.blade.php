@@ -48,7 +48,7 @@
         <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-all-items" role="tabpanel"
                 aria-labelledby="pills-all-items-tab">
-                <div class="row gy-4">
+                <div class="row gy-4 home-product-grid">
                     @foreach ($latestProducts ?? [] as $product)
                         <div class="col-lg-3 col-sm-6 col-xsm-6">
                             <x-product :product="$product" />
@@ -60,7 +60,7 @@
             @foreach ($categories ?? [] as $category)
                 <div class="tab-pane fade" id="pills-{{ $category->id }}" role="tabpanel"
                     aria-labelledby="pills-{{ $category->id }}-tab">
-                    <div class="row gy-4">
+                    <div class="row gy-4 home-product-grid">
                         @foreach ($category->products ?? [] as $product)
                             <div class="col-lg-3 col-sm-6 col-xsm-6">
                                 <x-product :product="$product" />

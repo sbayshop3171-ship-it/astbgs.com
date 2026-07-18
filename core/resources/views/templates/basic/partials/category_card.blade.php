@@ -1,5 +1,5 @@
 
-    <div class="row gy-4">
+    <div class="row gy-4 home-category-grid">
         @forelse ($categories as $category)
             <div class="col-lg-4 col-sm-6">
                 <a href="{{ route('products', ['category' => $category->slug]) }}" class="popular-category-item">

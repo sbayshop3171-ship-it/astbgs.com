@@ -40,6 +40,7 @@
     <a class="scroll-top"><i class="fas fa-angle-double-up"></i></a>
 
     @yield('panel')
+    @include('Template::partials.mobile_bottom_nav')
 
     <!--jQuery first, then Popper.js, then Bootstrap JS-->
     <script src="{{ asset('assets/global/js/jquery-3.7.1.min.js') }}"></script>

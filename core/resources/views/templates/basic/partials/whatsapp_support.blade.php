@@ -48,7 +48,7 @@
     @media (max-width: 575px) {
         .whatsapp-support {
             right: 18px !important;
-            bottom: 84px !important;
+            bottom: 150px !important;
             width: 52px !important;
             height: 52px !important;
         }

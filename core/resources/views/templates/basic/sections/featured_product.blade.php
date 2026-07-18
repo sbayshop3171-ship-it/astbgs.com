@@ -16,7 +16,7 @@
             </div>
 
             <div class="col-xxl-6 col-lg-7">
-                <div class="row gy-4">
+                <div class="row gy-4 home-product-grid">
                     @foreach ($featuredProducts ?? [] as $product)
                         <div class="col-sm-6 col-xsm-6">
                             <x-product :product="$product" />
