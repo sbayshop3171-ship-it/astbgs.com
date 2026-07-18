@@ -19,7 +19,11 @@
     <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/slick.css') }}">
     <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/ico-moon.css') }}">
     <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/main.css') }}">
-    <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/custom.css') }}">
+    @php
+        $customCssPath = public_path($activeTemplateTrue . 'css/custom.css');
+        $customCssVersion = is_file($customCssPath) ? filemtime($customCssPath) : time();
+    @endphp
+    <link rel="stylesheet" href="{{ asset($activeTemplateTrue . 'css/custom.css') }}?v={{ $customCssVersion }}">
     @include('Template::partials.premium_cart_assets')
 
     @stack('style')
